@@ -3,7 +3,6 @@
   python -m unittest discover -s tests -v
 """
 import json
-import tempfile
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -163,49 +162,87 @@ class Matching(unittest.TestCase):
         self.assertIsNone(match_game("MLB", dk_games("dk_mlb_p1.html")[0], [base, twin], NOW))
 
 
+class FakeFirestore:
+    """Stands in for store.Firestore: a dict of docs, same methods."""
+
+    def __init__(self, docs=None):
+        self.docs = dict(docs or {})
+        self.writes = []
+
+    def existing(self, keys):
+        return {k: dict(self.docs[k]) for k in keys if k in self.docs}
+
+    def write(self, docs):
+        for d in docs:
+            self.docs[d["key"]] = {**self.docs.get(d["key"], {}), **d}
+            self.writes.append(dict(d))
+        return len(docs)
+
+    def delete_before(self, day):
+        old = [k for k, d in self.docs.items() if d.get("day", "") < day]
+        for k in old:
+            del self.docs[k]
+        return len(old)
+
+
+def row(when, bets, money, key="MLB-824219", phase="sweep"):
+    g = dk_games("dk_mlb_p1.html")[0]
+    r = main.build_row("MLB", g, match_game("MLB", g, MLB, NOW), when, phase)
+    r.update(key=key, ml_home_bets=bets, ml_home_money=money)
+    return r
+
+
 class Saving(unittest.TestCase):
-    def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory()
-        self.orig = store.DATA_DIR
-        store.DATA_DIR = Path(self.tmp.name)
+    def test_first_grab_of_the_day_is_the_morning_number(self):
+        doc = store.build_doc(row(NOW, 40, 45), None, "2026-09-26")
+        self.assertEqual((doc["pubBetsHome"], doc["morningBetsHome"], doc["morningMoneyHome"]), (40, 40, 45))
+        self.assertEqual((doc["day"], doc["key"]), ("2026-09-26", "MLB-824219"))
 
-    def tearDown(self):
-        store.DATA_DIR = self.orig
-        self.tmp.cleanup()
+    def test_later_grabs_keep_the_morning_number(self):
+        first = store.build_doc(row(NOW, 40, 45), None, "2026-09-26")
+        later = store.build_doc(row(NOW + timedelta(hours=1), 52, 51, phase="T-10"), first, "2026-09-26")
+        self.assertEqual((later["pubBetsHome"], later["pubMoneyHome"], later["phase"]), (52, 51, "T-10"))
+        self.assertEqual((later["morningBetsHome"], later["morningMoneyHome"]), (40, 45))
+        self.assertEqual(later["morningAt"], first["morningAt"])
 
-    def row(self, when, bets, money, key="MLB-824219"):
-        g = dk_games("dk_mlb_p1.html")[0]
-        r = main.build_row("MLB", g, match_game("MLB", g, MLB, NOW), when, "sweep")
-        r.update(key=key, ml_home_bets=bets, ml_home_money=money)
-        return r
-
-    def test_csv_round_trip_keeps_numbers_as_numbers(self):
-        r = self.row(NOW, 52, 51)
-        store.append_rows("2026-09-26", [r])
-        back = store.load_rows("2026-09-26")[0]
-        self.assertEqual((back["ml_home_bets"], back["sp_home_line"], back["key"]), (52, 1.5, "MLB-824219"))
-
-    def test_doc_keeps_the_morning_number_and_the_latest(self):
-        morning = self.row(NOW, 40, 45)
-        later = self.row(NOW + timedelta(hours=1), 52, 51)
-        later["phase"] = "T-10"
-        doc = store.build_doc(later, [morning])
-        self.assertEqual((doc["pubBetsHome"], doc["pubMoneyHome"], doc["phase"]), (52, 51, "T-10"))
-        self.assertEqual((doc["morningBetsHome"], doc["morningMoneyHome"]), (40, 45))
-        self.assertEqual(doc["key"], "MLB-824219")
-        self.assertEqual(store.build_doc(morning, [])["morningBetsHome"], 40)  # first grab = morning
+    def test_a_new_day_starts_a_new_morning(self):
+        yesterday = store.build_doc(row(NOW, 40, 45), None, "2026-09-25")
+        today = store.build_doc(row(NOW, 60, 61), yesterday, "2026-09-26")
+        self.assertEqual((today["morningBetsHome"], today["morningMoneyHome"]), (60, 61))
 
     def test_doc_falls_back_to_spread_then_gives_up(self):
-        r = self.row(NOW, None, None)
-        self.assertEqual(store.build_doc(r, [])["market"], "spread")
+        r = row(NOW, None, None)
+        doc = store.build_doc(r, None, "2026-09-26")
+        self.assertEqual((doc["market"], doc["moneyline"]), ("spread", None))
         r.update(sp_home_bets=None, sp_home_money=None)
-        self.assertIsNone(store.build_doc(r, []))
+        self.assertIsNone(store.build_doc(r, None, "2026-09-26"))
 
     def test_robot_only_ever_writes_the_splits_collection(self):
         self.assertEqual(store.COLLECTION, "splits")
 
 
 class Runs(unittest.TestCase):
+    def run_robot(self, start, fs, dry_run=False):
+        """One run at `start` with the saved PIT @ DET page; returns (rows, sleeps, log)."""
+        g = dk_games("dk_mlb_p1.html")[0]  # PIT @ DET, first pitch 17:10 UTC
+        clock = {"t": start}
+        slept, rows, logs = [], [], []
+
+        def sleep(sec):
+            slept.append(sec)
+            clock["t"] += timedelta(seconds=sec)
+
+        saved = official.games_for, dk.fetch_league, store.firestore_from_env, main.summarize
+        official.games_for = lambda s, d: MLB if s == "MLB" else []
+        dk.fetch_league = lambda s, ed="today": [g]
+        store.firestore_from_env = lambda: fs
+        main.summarize = lambda r, log: rows.extend(r)
+        try:
+            main.run(dry_run=dry_run, wait=True, sports=["MLB"], log=logs.append, sleep=sleep, clock=lambda: clock["t"])
+        finally:
+            official.games_for, dk.fetch_league, store.firestore_from_env, main.summarize = saved
+        return rows, slept, logs
+
     def test_started_games_are_never_recorded(self):
         g = dk_games("dk_mlb_p1.html")[0]
         after_first_pitch = datetime(2026, 9, 26, 17, 11, tzinfo=timezone.utc)
@@ -214,34 +251,32 @@ class Runs(unittest.TestCase):
         self.assertEqual(rows, [])
 
     def test_pre_game_grabs_at_15_and_10_minutes(self):
-        g = dk_games("dk_mlb_p1.html")[0]  # PIT @ DET, first pitch 17:10 UTC
-        clock = {"t": datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc)}
-        slept = []
-
-        def sleep(sec):
-            slept.append(sec)
-            clock["t"] += timedelta(seconds=sec)
-
-        orig_games, orig_fetch, orig_load = official.games_for, dk.fetch_league, store.load_rows
-        official.games_for = lambda s, d: MLB if s == "MLB" else []
-        dk.fetch_league = lambda s, ed="today": [g]
-        store.load_rows = lambda day: []
-        rows = []
-        try:
-            orig_summ = main.summarize
-            main.summarize = lambda r, log: rows.extend(r)
-            main.run(dry_run=True, wait=True, sports=["MLB"], log=lambda *_: None, sleep=sleep, clock=lambda: clock["t"])
-        finally:
-            official.games_for, dk.fetch_league, store.load_rows = orig_games, orig_fetch, orig_load
-            main.summarize = orig_summ
+        rows, slept, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), None, dry_run=True)
         det = [r for r in rows if r["key"] == "MLB-824219"]
         self.assertEqual([r["phase"] for r in det], ["sweep", "T-15", "T-10"])
         self.assertEqual([r["min_to_start"] for r in det], [25, 15, 10])
         self.assertEqual(slept, [600.0, 300.0])
 
-    def test_slate_day_rolls_over_at_7am_eastern(self):
-        self.assertEqual(str(main.slate_day(datetime(2026, 9, 27, 4, 30, tzinfo=timezone.utc))), "2026-09-26")  # 12:30 AM ET
-        self.assertEqual(str(main.slate_day(datetime(2026, 9, 27, 11, 5, tzinfo=timezone.utc))), "2026-09-27")  # 7:05 AM ET
+    def test_live_run_saves_today_keeps_morning_and_clears_yesterday(self):
+        fs = FakeFirestore({
+            "MLB-111": {"key": "MLB-111", "day": "2026-09-25"},  # yesterday's game
+            "MLB-824219": {"key": "MLB-824219", "day": "2026-09-26", "market": "moneyline",
+                           "morningBetsHome": 30, "morningMoneyHome": 35, "morningAt": "2026-09-26T04:07:00Z"},
+        })
+        self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), fs)
+        self.assertNotIn("MLB-111", fs.docs)  # current day only
+        det = fs.docs["MLB-824219"]
+        self.assertEqual((det["pubBetsHome"], det["pubMoneyHome"], det["phase"]), (52, 51, "T-10"))
+        self.assertEqual((det["morningBetsHome"], det["morningMoneyHome"]), (30, 35))  # the midnight number stands
+        self.assertEqual([w["phase"] for w in fs.writes if w["key"] == "MLB-824219"], ["sweep", "T-15", "T-10"])
+
+    def test_no_key_saves_nothing(self):
+        _, _, logs = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), None)
+        self.assertTrue(any("nothing will be saved" in x for x in logs))
+
+    def test_the_day_starts_at_midnight_eastern(self):
+        self.assertEqual(str(main.slate_day(datetime(2026, 9, 27, 3, 59, tzinfo=timezone.utc))), "2026-09-26")  # 11:59 PM ET
+        self.assertEqual(str(main.slate_day(datetime(2026, 9, 27, 4, 1, tzinfo=timezone.utc))), "2026-09-27")  # 12:01 AM ET
 
 
 if __name__ == "__main__":

@@ -3,22 +3,23 @@ name: DK splits robot
 # ON/OFF SWITCH = this workflow's enabled state (Actions tab -> "DK splits robot"
 # -> "..." -> Disable / Enable workflow). It ships DISABLED: nothing runs.
 #
-# When enabled, every 30 minutes (8:07am -> 12:37am Eastern) it grabs the
-# DraftKings splits, waits for the 15- and 10-minute marks before each game, and
-# saves to data/*.csv here. It saves to Firebase ONLY once the
-# FIREBASE_SERVICE_ACCOUNT secret has been added.
+# When enabled it runs every 30 minutes around the clock. The first run after
+# midnight Eastern takes the day's MORNING numbers; every run updates them; it
+# also waits for the 15- and 10-minute marks before each game. Current day only:
+# earlier days are deleted from Firebase. Saves ONLY to the Firebase `splits`
+# collection (needs the FIREBASE_SERVICE_ACCOUNT secret).
 #
-# "Run workflow" by hand defaults to look-only (prints, saves nothing).
+# "Run workflow" by hand: look-only (default, saves nothing), check-firebase
+# (proves the key works, touches no game data), or live (a real run).
 on:
   schedule:
-    - cron: "7,37 12-23 * * *" # UTC
-    - cron: "7,37 0-4 * * *"   # UTC (after 8pm Eastern)
+    - cron: "7,37 * * * *" # UTC; :07 and :37 dodge GitHub's busy top of the hour
   workflow_dispatch:
     inputs:
       mode:
-        description: "look-only = print and save nothing; live = a real run"
+        description: "look-only = print, save nothing | check-firebase = test the key | live = real run"
         type: choice
-        options: [look-only, live]
+        options: [look-only, check-firebase, live]
         default: look-only
 
 concurrency:
@@ -26,7 +27,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: write # only for the keep-alive below; the robot saves nothing in this repo
 
 jobs:
   run:
@@ -42,11 +43,25 @@ jobs:
       - name: Look only (saves nothing)
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'look-only'
         run: python -m robot.main --dry-run --no-wait
+      - name: Check the Firebase key
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'check-firebase'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: python -m robot.main --check-firebase
       - name: Grab and save
         if: github.event_name == 'schedule' || inputs.mode == 'live'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: python -m robot.main
+      # GitHub pauses timers in public repos after 60 days without a commit. Once
+      # every ~25 days this rewrites one date in .keepalive -- no numbers, no history.
+      - name: Keep the timer alive
+        if: github.event_name == 'schedule'
         run: |
-          git config user.name "dk-splits-robot"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          python -m robot.main
+          last=$(git log -1 --format=%ct)
+          if [ $(( $(date +%s) - last )) -gt $(( 25 * 86400 )) ]; then
+            date -u +%F > .keepalive
+            git config user.name "dk-splits-robot"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .keepalive && git commit -q -m "keepalive" && git push -q
+          fi

@@ -1,16 +1,17 @@
-"""One robot run.
+"""One robot run (every 30 minutes, around the clock).
 
+0. CLEAN: delete every `splits` doc from an earlier day (current day only).
 1. SWEEP: every league with a game still to start today -> grab + save.
 2. PRE-GAME: for each game starting within the next 40 minutes, wait for the
    15- and 10-minute marks and grab that league again (saving only those games).
    The waiting happens inside the run because GitHub's own timer can fire
    10-15 minutes late.
 
-A "slate day" runs 7am -> 7am Eastern, so a game that starts after midnight
-still belongs to the evening it was bet on, and the first grab after 7am is the
-day's MORNING number.
+The day is the Eastern calendar day: it starts at midnight, and the first grab
+after midnight is the day's MORNING number (user's call 9/26).
 
   python -m robot.main --dry-run --no-wait   # look only: print, save nothing
+  python -m robot.main --check-firebase      # prove the key works; touches no game data
 """
 from __future__ import annotations
 
@@ -26,7 +27,6 @@ from .match import match_game, team_split, total_split
 
 HORIZON = timedelta(minutes=40)
 LEADS = (15, 10)
-SLATE_ROLLOVER_HOUR_ET = 7
 
 
 def utcnow() -> datetime:
@@ -34,7 +34,8 @@ def utcnow() -> datetime:
 
 
 def slate_day(now: datetime):
-    return (now.astimezone(dk.ET) - timedelta(hours=SLATE_ROLLOVER_HOUR_ET)).date()
+    """The Eastern calendar day — it starts at midnight."""
+    return now.astimezone(dk.ET).date()
 
 
 def eligible(g: official.OfficialGame, now: datetime) -> bool:
@@ -136,23 +137,25 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
     active = [s for s in sports if any(eligible(g, now) for g in games.get(s, []))]
     log(f"  leagues with games still to start: {', '.join(active) or 'none'}")
 
+    day_s = day.isoformat()
     fs = None if dry_run else store.firestore_from_env()
     if not dry_run:
-        log(f"  Firebase: {'ON -> collection splits' if fs else 'off (no key added yet)'}")
-    history = store.load_rows(day.isoformat())
+        log(f"  Firebase: {'ON -> collection splits' if fs else 'OFF (no key) - nothing will be saved'}")
+    if fs:
+        gone = fs.delete_before(day_s)
+        if gone:
+            log(f"  cleared {gone} doc(s) from before {day_s} (current day only)")
     all_rows: list[dict] = []
 
     def save(rows: list[dict], label: str) -> None:
         all_rows.extend(rows)
-        if dry_run or not rows:
+        if not fs or not rows:
             return
-        docs = [d for d in (store.build_doc(r, history) for r in rows if r.get("key")) if d]
-        store.append_rows(day.isoformat(), rows)
-        history.extend(rows)
-        if fs:
-            fs.write(docs)
-        et = clock().astimezone(dk.ET).strftime("%H:%M ET")
-        store.commit_data(f"data: {label} {et} ({len(docs)} games)")
+        keyed = [r for r in rows if r.get("key")]
+        existing = fs.existing(sorted({r["key"] for r in keyed}))
+        docs = [d for d in (store.build_doc(r, existing.get(r["key"]), day_s) for r in keyed) if d]
+        n = fs.write(docs)
+        log(f"  saved {n} game(s) to Firebase ({label})")
 
     save(grab(active, games, now, None, log), "sweep")
 
@@ -204,8 +207,18 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="DraftKings betting-splits robot")
     ap.add_argument("--dry-run", action="store_true", help="look only: print, save nothing")
     ap.add_argument("--no-wait", action="store_true", help="skip the pre-game waiting")
+    ap.add_argument("--check-firebase", action="store_true",
+                    help="prove the key works: write, read back and delete one throwaway doc")
     ap.add_argument("--sports", default=",".join(official.SPORTS))
     a = ap.parse_args(argv)
+    if a.check_firebase:
+        fs = store.firestore_from_env()
+        if not fs:
+            print("Firebase check: NO KEY (FIREBASE_SERVICE_ACCOUNT secret missing)")
+            return 1
+        result = fs.self_test()
+        print(f"Firebase check (project {fs.project}, collection {store.COLLECTION}): {result}")
+        return 0 if result == "OK" else 1
     sports = [s.strip().upper() for s in a.sports.split(",") if s.strip()]
     return run(a.dry_run, not a.no_wait, sports)
 
