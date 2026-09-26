@@ -1,0 +1,52 @@
+name: DK splits robot
+
+# ON/OFF SWITCH = this workflow's enabled state (Actions tab -> "DK splits robot"
+# -> "..." -> Disable / Enable workflow). It ships DISABLED: nothing runs.
+#
+# When enabled, every 30 minutes (8:07am -> 12:37am Eastern) it grabs the
+# DraftKings splits, waits for the 15- and 10-minute marks before each game, and
+# saves to data/*.csv here. It saves to Firebase ONLY once the
+# FIREBASE_SERVICE_ACCOUNT secret has been added.
+#
+# "Run workflow" by hand defaults to look-only (prints, saves nothing).
+on:
+  schedule:
+    - cron: "7,37 12-23 * * *" # UTC
+    - cron: "7,37 0-4 * * *"   # UTC (after 8pm Eastern)
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "look-only = print and save nothing; live = a real run"
+        type: choice
+        options: [look-only, live]
+        default: look-only
+
+concurrency:
+  group: dk-splits-robot
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Look only (saves nothing)
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'look-only'
+        run: python -m robot.main --dry-run --no-wait
+      - name: Grab and save
+        if: github.event_name == 'schedule' || inputs.mode == 'live'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          git config user.name "dk-splits-robot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python -m robot.main

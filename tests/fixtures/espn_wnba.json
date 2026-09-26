@@ -1,0 +1,148 @@
+{
+"events": [
+{
+"id": "401918014",
+"date": "2026-09-27T18:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Minnesota",
+"name": "Lynx",
+"abbreviation": "MIN",
+"displayName": "Minnesota Lynx",
+"shortDisplayName": "Lynx"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "New York",
+"name": "Liberty",
+"abbreviation": "NY",
+"displayName": "New York Liberty",
+"shortDisplayName": "Liberty"
+}
+}
+]
+}
+]
+},
+{
+"id": "401918015",
+"date": "2026-09-27T20:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Las Vegas",
+"name": "Aces",
+"abbreviation": "LV",
+"displayName": "Las Vegas Aces",
+"shortDisplayName": "Aces"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Indiana",
+"name": "Fever",
+"abbreviation": "IND",
+"displayName": "Indiana Fever",
+"shortDisplayName": "Fever"
+}
+}
+]
+}
+]
+},
+{
+"id": "401918013",
+"date": "2026-09-27T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Atlanta",
+"name": "Dream",
+"abbreviation": "ATL",
+"displayName": "Atlanta Dream",
+"shortDisplayName": "Dream"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Washington",
+"name": "Mystics",
+"abbreviation": "WSH",
+"displayName": "Washington Mystics",
+"shortDisplayName": "Mystics"
+}
+}
+]
+}
+]
+},
+{
+"id": "401918016",
+"date": "2026-09-28T01:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Golden State",
+"name": "Valkyries",
+"abbreviation": "GS",
+"displayName": "Golden State Valkyries",
+"shortDisplayName": "Valkyries"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Dallas",
+"name": "Wings",
+"abbreviation": "DAL",
+"displayName": "Dallas Wings",
+"shortDisplayName": "Wings"
+}
+}
+]
+}
+]
+}
+]
+}

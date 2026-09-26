@@ -1,0 +1,372 @@
+{
+"dates": [
+{
+"games": [
+{
+"gamePk": 822678,
+"gameDate": "2026-09-26T16:35:00Z",
+"status": {
+"abstractGameState": "Live",
+"detailedState": "In Progress"
+},
+"teams": {
+"away": {
+"team": {
+"name": "New York Mets",
+"teamName": "Mets",
+"clubName": "Mets",
+"shortName": "NY Mets",
+"abbreviation": "NYM"
+}
+},
+"home": {
+"team": {
+"name": "Washington Nationals",
+"teamName": "Nationals",
+"clubName": "Nationals",
+"shortName": "Washington",
+"abbreviation": "WSH"
+}
+}
+}
+},
+{
+"gamePk": 824219,
+"gameDate": "2026-09-26T17:10:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Pre-Game"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Pittsburgh Pirates",
+"teamName": "Pirates",
+"clubName": "Pirates",
+"shortName": "Pittsburgh",
+"abbreviation": "PIT"
+}
+},
+"home": {
+"team": {
+"name": "Detroit Tigers",
+"teamName": "Tigers",
+"clubName": "Tigers",
+"shortName": "Detroit",
+"abbreviation": "DET"
+}
+}
+}
+},
+{
+"gamePk": 822759,
+"gameDate": "2026-09-26T19:07:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Pre-Game"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Cincinnati Reds",
+"teamName": "Reds",
+"clubName": "Reds",
+"shortName": "Cincinnati",
+"abbreviation": "CIN"
+}
+},
+"home": {
+"team": {
+"name": "Toronto Blue Jays",
+"teamName": "Blue Jays",
+"clubName": "Blue Jays",
+"shortName": "Toronto",
+"abbreviation": "TOR"
+}
+}
+}
+},
+{
+"gamePk": 823165,
+"gameDate": "2026-09-26T20:05:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Los Angeles Dodgers",
+"teamName": "Dodgers",
+"clubName": "Dodgers",
+"shortName": "LA Dodgers",
+"abbreviation": "LAD"
+}
+},
+"home": {
+"team": {
+"name": "San Francisco Giants",
+"teamName": "Giants",
+"clubName": "Giants",
+"shortName": "San Francisco",
+"abbreviation": "SF"
+}
+}
+}
+},
+{
+"gamePk": 823653,
+"gameDate": "2026-09-26T20:10:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Texas Rangers",
+"teamName": "Rangers",
+"clubName": "Rangers",
+"shortName": "Texas",
+"abbreviation": "TEX"
+}
+},
+"home": {
+"team": {
+"name": "Minnesota Twins",
+"teamName": "Twins",
+"clubName": "Twins",
+"shortName": "Minnesota",
+"abbreviation": "MIN"
+}
+}
+}
+},
+{
+"gamePk": 823813,
+"gameDate": "2026-09-26T20:10:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Pre-Game"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Atlanta Braves",
+"teamName": "Braves",
+"clubName": "Braves",
+"shortName": "Atlanta",
+"abbreviation": "ATL"
+}
+},
+"home": {
+"team": {
+"name": "Miami Marlins",
+"teamName": "Marlins",
+"clubName": "Marlins",
+"shortName": "Miami",
+"abbreviation": "MIA"
+}
+}
+}
+},
+{
+"gamePk": 824057,
+"gameDate": "2026-09-26T23:10:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Cleveland Guardians",
+"teamName": "Guardians",
+"clubName": "Guardians",
+"shortName": "Cleveland",
+"abbreviation": "CLE"
+}
+},
+"home": {
+"team": {
+"name": "Kansas City Royals",
+"teamName": "Royals",
+"clubName": "Royals",
+"shortName": "Kansas City",
+"abbreviation": "KC"
+}
+}
+}
+},
+{
+"gamePk": 824543,
+"gameDate": "2026-09-26T23:10:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Colorado Rockies",
+"teamName": "Rockies",
+"clubName": "Rockies",
+"shortName": "Colorado",
+"abbreviation": "COL"
+}
+},
+"home": {
+"team": {
+"name": "Chicago White Sox",
+"teamName": "White Sox",
+"clubName": "White Sox",
+"shortName": "Chi White Sox",
+"abbreviation": "CWS"
+}
+}
+}
+},
+{
+"gamePk": 823733,
+"gameDate": "2026-09-26T23:10:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "St. Louis Cardinals",
+"teamName": "Cardinals",
+"clubName": "Cardinals",
+"shortName": "St. Louis",
+"abbreviation": "STL"
+}
+},
+"home": {
+"team": {
+"name": "Milwaukee Brewers",
+"teamName": "Brewers",
+"clubName": "Brewers",
+"shortName": "Milwaukee",
+"abbreviation": "MIL"
+}
+}
+}
+},
+{
+"gamePk": 823407,
+"gameDate": "2026-09-26T23:15:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Tampa Bay Rays",
+"teamName": "Rays",
+"clubName": "Rays",
+"shortName": "Tampa Bay",
+"abbreviation": "TB"
+}
+},
+"home": {
+"team": {
+"name": "Philadelphia Phillies",
+"teamName": "Phillies",
+"clubName": "Phillies",
+"shortName": "Philadelphia",
+"abbreviation": "PHI"
+}
+}
+}
+},
+{
+"gamePk": 823245,
+"gameDate": "2026-09-27T00:40:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Arizona Diamondbacks",
+"teamName": "D-backs",
+"clubName": "Diamondbacks",
+"shortName": "Arizona",
+"abbreviation": "AZ"
+}
+},
+"home": {
+"team": {
+"name": "San Diego Padres",
+"teamName": "Padres",
+"clubName": "Padres",
+"shortName": "San Diego",
+"abbreviation": "SD"
+}
+}
+}
+},
+{
+"gamePk": 824949,
+"gameDate": "2026-09-27T01:40:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Houston Astros",
+"teamName": "Astros",
+"clubName": "Astros",
+"shortName": "Houston",
+"abbreviation": "HOU"
+}
+},
+"home": {
+"team": {
+"name": "Athletics",
+"teamName": "Athletics",
+"clubName": "Athletics",
+"shortName": "Athletics",
+"abbreviation": "ATH"
+}
+}
+}
+},
+{
+"gamePk": 823083,
+"gameDate": "2026-09-27T01:40:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Los Angeles Angels",
+"teamName": "Angels",
+"clubName": "Angels",
+"shortName": "LA Angels",
+"abbreviation": "LAA"
+}
+},
+"home": {
+"team": {
+"name": "Seattle Mariners",
+"teamName": "Mariners",
+"clubName": "Mariners",
+"shortName": "Seattle",
+"abbreviation": "SEA"
+}
+}
+}
+}
+]
+}
+]
+}
