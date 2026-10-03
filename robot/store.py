@@ -112,9 +112,11 @@ def _is_odds(v) -> bool:
 def build_fd_doc(
     *, key: str, sport: str, game_id: str, start_utc: str, ml_away: int, ml_home: int,
     grabbed_at: str, book_at: str, existing: dict | None, day: str,
+    sp_away: tuple[float, int] | None = None, sp_home: tuple[float, int] | None = None,
 ) -> dict:
     """FanDuel moneylines for one game, on the SAME doc as its DK splits (merged).
-    The day's first FanDuel pull is the MORNING line, kept all day like the splits."""
+    The day's first FanDuel pull is the MORNING line, kept all day like the splits.
+    MLB/NHL also carry the main run/puck line (`fdSpAway` / `fdSpHome`: point + price)."""
     keep = (
         existing is not None
         and existing.get("day") == day
@@ -135,6 +137,14 @@ def build_fd_doc(
         "fdMorningAway": existing["fdMorningAway"] if keep else ml_away,
         "fdMorningHome": existing["fdMorningHome"] if keep else ml_home,
         "fdMorningAt": existing["fdMorningAt"] if keep else grabbed_at,
+        **(
+            {
+                "fdSpAway": {"point": sp_away[0], "price": sp_away[1]},
+                "fdSpHome": {"point": sp_home[0], "price": sp_home[1]},
+            }
+            if sp_away and sp_home
+            else {}
+        ),
         "updatedAt": int(time.time() * 1000),
     }
 

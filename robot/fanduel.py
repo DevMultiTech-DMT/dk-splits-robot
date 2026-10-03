@@ -65,7 +65,7 @@ def allowed(kind: str, used_today: int, cap: int, credits: int | None) -> bool:
         return True
     if used_today >= cap:
         return False
-    if kind == "T-10":
+    if kind in ("T-10", "spreads"):
         return True
     if kind == "T-15":
         return cap >= 40
@@ -88,6 +88,15 @@ class FdGame:
     ml_away: int
     ml_home: int
     book_at: str  # FanDuel's own last_update
+    # MLB run line / NHL puck line (main spread, always ±1.5): (point, price) per team, or None
+    sp_away: tuple[float, int] | None = None
+    sp_home: tuple[float, int] | None = None
+
+
+# 10/3 (user: option boxes "should just fill automatically"): the run line / puck line is
+# FanDuel's MAIN spread, so the same per-sport pull can carry it for every game: +1 credit
+# per pull instead of 1 credit per game (13 NHL puck-line boxes on 10/3 alone).
+SPREAD_SPORTS = ("MLB", "NHL")
 
 
 def _get(url: str, timeout: int = 30):
@@ -134,20 +143,28 @@ def parse_events(payload) -> list[FdGame]:
         a, h = price.get(e.get("away_team")), price.get(e.get("home_team"))
         if not all(isinstance(x, (int, float)) and abs(x) >= 100 for x in (a, h)):
             continue
+        spreads = next((m for m in fd.get("markets", []) if m.get("key") == "spreads"), None)
+        sp = {}
+        for o in (spreads or {}).get("outcomes", []):
+            if isinstance(o.get("point"), (int, float)) and isinstance(o.get("price"), (int, float)) and abs(o["price"]) >= 100:
+                sp[o.get("name")] = (float(o["point"]), int(o["price"]))
         out.append(
             FdGame(
                 str(e["id"]), e["away_team"], e["home_team"],
                 datetime.fromisoformat(e["commence_time"].replace("Z", "+00:00")),
                 int(a), int(h), fd.get("last_update", ""),
+                sp.get(e["away_team"]), sp.get(e["home_team"]),
             )
         )
     return out
 
 
 def fetch(sport: str, key: str, frm: datetime, to: datetime, get=_get) -> tuple[list[FdGame], int | None]:
-    """FanDuel moneylines for `sport` games starting in [frm, to]. 1 credit (0 if none)."""
+    """FanDuel moneylines (+ the main run/puck line for MLB/NHL) for `sport` games starting
+    in [frm, to]. 1 credit per market (h2h, + spreads for MLB/NHL); 0 if no games."""
+    markets = "h2h,spreads" if sport in SPREAD_SPORTS else "h2h"
     q = urllib.parse.urlencode({
-        "apiKey": key, "bookmakers": "fanduel", "markets": "h2h", "oddsFormat": "american",
+        "apiKey": key, "bookmakers": "fanduel", "markets": markets, "oddsFormat": "american",
         "dateFormat": "iso", "commenceTimeFrom": _iso(frm), "commenceTimeTo": _iso(to),
     })
     status, body, headers = get(f"{BASE}/sports/{SPORT_KEYS[sport]}/odds/?{q}")

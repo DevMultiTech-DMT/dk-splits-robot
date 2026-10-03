@@ -181,7 +181,13 @@ class FanDuelPuller:
         still gets its own first price as its morning line, via build_fd_doc.)"""
         if not any(eligible(g, now) for g in self.games.get(sport, [])):
             return None
-        return "refresh" if self.state.get("lastPull", {}).get(sport) else "morning"
+        if not self.state.get("lastPull", {}).get(sport):
+            return "morning"
+        # MLB/NHL run/puck lines: the first pull that CARRIED them today (10/3: added after that
+        # day's morning pulls) -- once per sport per day, under the day's cap like the T-10 line
+        if sport in fanduel.SPREAD_SPORTS and not self.state.get("spreadPull", {}).get(sport):
+            return "spreads"
+        return "refresh"
 
     def pull(self, sport: str, kind: str, now: datetime) -> None:
         if not self.on:
@@ -209,6 +215,8 @@ class FanDuelPuller:
             self.credits = rem
         st["oddsUsed"] = st.get("oddsUsed", 0) + max(cost, 0)
         st["lastPull"][sport] = store.iso(now)
+        if sport in fanduel.SPREAD_SPORTS:
+            st.setdefault("spreadPull", {})[sport] = store.iso(now)
         matched = []
         for e in events:
             m = match_teams(sport, e.away, e.home, e.start_utc, elig)
@@ -216,20 +224,21 @@ class FanDuelPuller:
                 continue
             # prices follow the TEAM: a neutral-site game listed the other way round is flipped back
             ml_away, ml_home = (e.ml_home, e.ml_away) if m.flipped else (e.ml_away, e.ml_home)
-            matched.append((m.game, ml_away, ml_home, e.book_at))
+            sp_away, sp_home = (e.sp_home, e.sp_away) if m.flipped else (e.sp_away, e.sp_home)
+            matched.append((m.game, ml_away, ml_home, e.book_at, sp_away, sp_home))
         if self.fs:
             ex = self.fs.existing([g.key for g, *_ in matched])
             docs = [
                 store.build_fd_doc(
                     key=g.key, sport=sport, game_id=g.game_id, start_utc=store.iso(g.start_utc),
                     ml_away=a, ml_home=h, grabbed_at=store.iso(now), book_at=b,
-                    existing=ex.get(g.key), day=self.day_s,
+                    existing=ex.get(g.key), day=self.day_s, sp_away=spa, sp_home=sph,
                 )
-                for g, a, h, b in matched
+                for g, a, h, b, spa, sph in matched
             ]
             self.fs.write(docs)
             self.fs.set_state(st)
-        for g, a, h, _ in matched:
+        for g, a, h, *_ in matched:
             self.lines.append({"sport": sport, "game": f"{g.away.abbr} @ {g.home.abbr}", "start": g.start_utc,
                                "kind": kind, "away": a, "home": h})
         self.log(f"  FanDuel {sport} ({kind}): {len(matched)} game(s) matched of {len(events)}, "

@@ -134,6 +134,33 @@ class FanDuelPulls(unittest.TestCase):
         p2.pull("MLB", p2.kind_for_sweep("MLB", later), later)  # refresh needs a big plan -> skipped
         self.assertEqual(len(calls), 1)
 
+    def test_run_and_puck_lines_ride_the_same_pull(self):
+        # The Odds API shape with h2h + spreads (Yankees @ Rays 10/3: NYY +1.5 -210 / TB -1.5 +172)
+        ev = {"id": "x", "commence_time": "2026-10-03T22:31:00Z", "home_team": "Tampa Bay Rays",
+              "away_team": "New York Yankees", "bookmakers": [{"key": "fanduel", "last_update": "", "markets": [
+                  {"key": "h2h", "outcomes": [{"name": "New York Yankees", "price": 114}, {"name": "Tampa Bay Rays", "price": -134}]},
+                  {"key": "spreads", "outcomes": [{"name": "New York Yankees", "price": -210, "point": 1.5},
+                                                  {"name": "Tampa Bay Rays", "price": 172, "point": -1.5}]}]}]}
+        g = fanduel.parse_events([ev])[0]
+        self.assertEqual((g.sp_away, g.sp_home), ((1.5, -210), (-1.5, 172)))
+        fs = FakeFirestore()
+        self.puller(fs, events=[g]).pull("MLB", "morning", NOW_1003)
+        tb = next(x.key for x in MLB_1003 if x.home.abbr == "TB")
+        self.assertEqual((fs.docs[tb]["fdSpAway"], fs.docs[tb]["fdSpHome"]),
+                         ({"point": 1.5, "price": -210}, {"point": -1.5, "price": 172}))
+
+    def test_a_day_whose_morning_pull_had_no_run_lines_gets_one_spreads_pull(self):
+        fs = FakeFirestore()
+        fs.docs[store.STATE_DOC] = {"day": "2026-10-03", "oddsUsed": 4, "oddsCap": 36, "creditsAtCap": 488,
+                                    "lastPull": {"MLB": "2026-10-03T05:34:53Z", "CFB": "2026-10-03T05:34:53Z"}}
+        p = self.puller(fs)
+        later = NOW_1003 + timedelta(hours=1)
+        self.assertEqual(p.kind_for_sweep("MLB", later), "spreads")  # MLB carries run lines -> once
+        p.pull("MLB", "spreads", later)
+        self.assertEqual(p.kind_for_sweep("MLB", later), "refresh")
+        self.assertTrue(fanduel.allowed("spreads", 4, 36, 480))
+        self.assertFalse(fanduel.allowed("spreads", 36, 36, 480))  # under the day's cap
+
     def test_one_pull_per_sport_inside_8_minutes(self):
         fs, calls = FakeFirestore(), []
         p = self.puller(fs, calls=calls)
