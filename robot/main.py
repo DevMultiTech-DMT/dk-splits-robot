@@ -166,14 +166,14 @@ class FanDuelPuller:
         log(f"  FanDuel: ON | {self.credits} credits left | today's cap {st['oddsCap']}, used {st['oddsUsed']}")
 
     def kind_for_sweep(self, sport: str, now: datetime) -> str | None:
-        """'morning' while any of today's games still lacks a morning line, else 'refresh'."""
-        keys = [g.key for g in self.games.get(sport, []) if eligible(g, now)]
-        if not keys:
+        """'morning' = the day's FIRST FanDuel pull for the sport; every sweep after it is a
+        'refresh'. (10/3 fix: it used to stay 'morning' while any game lacked a morning line,
+        and TXSO @ FAU / McNeese @ LSU had no FanDuel price at all -- so every 30-minute sweep
+        re-pulled CFB as 'morning', 1 credit each, outside the day's cap. A game priced later
+        still gets its own first price as its morning line, via build_fd_doc.)"""
+        if not any(eligible(g, now) for g in self.games.get(sport, [])):
             return None
-        if not self.fs:
-            return "morning"
-        ex = self.fs.existing(keys)
-        return "morning" if any(not ex.get(k, {}).get("fdMorningAt") for k in keys) else "refresh"
+        return "refresh" if self.state.get("lastPull", {}).get(sport) else "morning"
 
     def pull(self, sport: str, kind: str, now: datetime) -> None:
         if not self.on:

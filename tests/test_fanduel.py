@@ -122,6 +122,18 @@ class FanDuelPulls(unittest.TestCase):
         self.assertEqual((d["fdMlAway"], d["fdMlHome"], d["fdMorningAway"], d["fdMorningHome"]), (170, -205, 188, -225))
         self.assertEqual(fs.docs[store.STATE_DOC]["oddsUsed"], 2)
 
+    def test_a_game_without_a_fanduel_price_never_repeats_the_morning_pull(self):
+        # 10/3: TXSO @ FAU had no FanDuel line; the morning pull must not repeat every sweep
+        fs, calls = FakeFirestore(), []
+        some = fanduel.parse_events(load("fd_mlb_1003.json"))[:2]  # 2 of the 4 MLB games priced
+        p = self.puller(fs, events=some, calls=calls)
+        p.pull("MLB", p.kind_for_sweep("MLB", NOW_1003), NOW_1003)
+        later = NOW_1003 + timedelta(minutes=35)
+        p2 = self.puller(fs, events=some, calls=calls)  # the next 30-minute run
+        self.assertEqual(p2.kind_for_sweep("MLB", later), "refresh")
+        p2.pull("MLB", p2.kind_for_sweep("MLB", later), later)  # refresh needs a big plan -> skipped
+        self.assertEqual(len(calls), 1)
+
     def test_one_pull_per_sport_inside_8_minutes(self):
         fs, calls = FakeFirestore(), []
         p = self.puller(fs, calls=calls)
