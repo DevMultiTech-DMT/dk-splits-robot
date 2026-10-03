@@ -7,7 +7,8 @@ name: DK splits robot
 # midnight Eastern takes the day's MORNING numbers; every run updates them; it
 # also waits for the 15- and 10-minute marks before each game. Current day only:
 # earlier days are deleted from Firebase. Saves ONLY to the Firebase `splits`
-# collection (needs the FIREBASE_SERVICE_ACCOUNT secret).
+# collection (needs the FIREBASE_SERVICE_ACCOUNT secret). FanDuel moneylines are
+# added only once the ODDS_API_KEY secret exists, and they're credit-budgeted.
 #
 # "Run workflow" by hand: look-only (default, saves nothing), check-firebase
 # (proves the key works, touches no game data), or live (a real run).
@@ -17,9 +18,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "look-only = print, save nothing | check-firebase = test the key | live = real run"
+        description: "look-only = print, save nothing | check-firebase / check-odds = test a key (free) | live = real run"
         type: choice
-        options: [look-only, check-firebase, live]
+        options: [look-only, check-firebase, check-odds, live]
         default: look-only
 
 concurrency:
@@ -48,10 +49,17 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: python -m robot.main --check-firebase
+      - name: Check the Odds API key (free, spends no credits)
+        if: github.event_name == 'workflow_dispatch' && inputs.mode == 'check-odds'
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+        run: python -m robot.main --check-odds
       - name: Grab and save
         if: github.event_name == 'schedule' || inputs.mode == 'live'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          # FanDuel moneylines run ONLY when this secret exists (its own on/off switch)
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: python -m robot.main
       # GitHub pauses timers in public repos after 60 days without a commit. Once
       # every ~25 days this rewrites one date in .keepalive -- no numbers, no history.

@@ -1,0 +1,1948 @@
+{
+"events": [
+{
+"id": "401862787",
+"date": "2026-10-03T15:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Charlotte",
+"name": "49ers",
+"abbreviation": "CLT",
+"displayName": "Charlotte 49ers",
+"shortDisplayName": "Charlotte"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Memphis",
+"name": "Tigers",
+"abbreviation": "MEM",
+"displayName": "Memphis Tigers",
+"shortDisplayName": "Memphis"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858250",
+"date": "2026-10-03T16:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "North Carolina",
+"name": "Tar Heels",
+"abbreviation": "UNC",
+"displayName": "North Carolina Tar Heels",
+"shortDisplayName": "North Carolina"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Notre Dame",
+"name": "Fighting Irish",
+"abbreviation": "ND",
+"displayName": "Notre Dame Fighting Irish",
+"shortDisplayName": "Notre Dame"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856707",
+"date": "2026-10-03T16:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Mississippi State",
+"name": "Bulldogs",
+"abbreviation": "MSST",
+"displayName": "Mississippi State Bulldogs",
+"shortDisplayName": "Mississippi St"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Alabama",
+"name": "Crimson Tide",
+"abbreviation": "ALA",
+"displayName": "Alabama Crimson Tide",
+"shortDisplayName": "Alabama"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856819",
+"date": "2026-10-03T16:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Houston",
+"name": "Cougars",
+"abbreviation": "HOU",
+"displayName": "Houston Cougars",
+"shortDisplayName": "Houston"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "UCF",
+"name": "Knights",
+"abbreviation": "UCF",
+"displayName": "UCF Knights",
+"shortDisplayName": "UCF"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858246",
+"date": "2026-10-03T16:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "SMU",
+"name": "Mustangs",
+"abbreviation": "SMU",
+"displayName": "SMU Mustangs",
+"shortDisplayName": "SMU"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Boston College",
+"name": "Eagles",
+"abbreviation": "BC",
+"displayName": "Boston College Eagles",
+"shortDisplayName": "Boston College"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856807",
+"date": "2026-10-03T16:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Kansas",
+"name": "Jayhawks",
+"abbreviation": "KU",
+"displayName": "Kansas Jayhawks",
+"shortDisplayName": "Kansas"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Middle Tennessee",
+"name": "Blue Raiders",
+"abbreviation": "MTSU",
+"displayName": "Middle Tennessee Blue Raiders",
+"shortDisplayName": "MTSU"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856822",
+"date": "2026-10-03T16:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Iowa State",
+"name": "Cyclones",
+"abbreviation": "ISU",
+"displayName": "Iowa State Cyclones",
+"shortDisplayName": "Iowa State"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "West Virginia",
+"name": "Mountaineers",
+"abbreviation": "WVU",
+"displayName": "West Virginia Mountaineers",
+"shortDisplayName": "West Virginia"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858251",
+"date": "2026-10-03T16:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Wake Forest",
+"name": "Demon Deacons",
+"abbreviation": "WAKE",
+"displayName": "Wake Forest Demon Deacons",
+"shortDisplayName": "Wake Forest"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Stanford",
+"name": "Cardinal",
+"abbreviation": "STAN",
+"displayName": "Stanford Cardinal",
+"shortDisplayName": "Stanford"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858252",
+"date": "2026-10-03T16:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "UConn",
+"name": "Huskies",
+"abbreviation": "CONN",
+"displayName": "UConn Huskies",
+"shortDisplayName": "UConn"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Syracuse",
+"name": "Orange",
+"abbreviation": "SYR",
+"displayName": "Syracuse Orange",
+"shortDisplayName": "Syracuse"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858474",
+"date": "2026-10-03T16:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Minnesota",
+"name": "Golden Gophers",
+"abbreviation": "MINN",
+"displayName": "Minnesota Golden Gophers",
+"shortDisplayName": "Minnesota"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Michigan",
+"name": "Wolverines",
+"abbreviation": "MICH",
+"displayName": "Michigan Wolverines",
+"shortDisplayName": "Michigan"
+}
+}
+]
+}
+]
+},
+{
+"id": "401862791",
+"date": "2026-10-03T16:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Air Force",
+"name": "Falcons",
+"abbreviation": "AFA",
+"displayName": "Air Force Falcons",
+"shortDisplayName": "Air Force"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Navy",
+"name": "Midshipmen",
+"abbreviation": "NAVY",
+"displayName": "Navy Midshipmen",
+"shortDisplayName": "Navy"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858479",
+"date": "2026-10-03T16:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Wisconsin",
+"name": "Badgers",
+"abbreviation": "WIS",
+"displayName": "Wisconsin Badgers",
+"shortDisplayName": "Wisconsin"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Michigan State",
+"name": "Spartans",
+"abbreviation": "MSU",
+"displayName": "Michigan State Spartans",
+"shortDisplayName": "Michigan St"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856705",
+"date": "2026-10-03T16:45Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Georgia",
+"name": "Bulldogs",
+"abbreviation": "UGA",
+"displayName": "Georgia Bulldogs",
+"shortDisplayName": "Georgia"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Vanderbilt",
+"name": "Commodores",
+"abbreviation": "VAN",
+"displayName": "Vanderbilt Commodores",
+"shortDisplayName": "Vanderbilt"
+}
+}
+]
+}
+]
+},
+{
+"id": "401866432",
+"date": "2026-10-03T17:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Buffalo",
+"name": "Bulls",
+"abbreviation": "BUFF",
+"displayName": "Buffalo Bulls",
+"shortDisplayName": "Buffalo"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Western Michigan",
+"name": "Broncos",
+"abbreviation": "WMU",
+"displayName": "Western Michigan Broncos",
+"shortDisplayName": "W Michigan"
+}
+}
+]
+}
+]
+},
+{
+"id": "401866431",
+"date": "2026-10-03T18:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Ball State",
+"name": "Cardinals",
+"abbreviation": "BALL",
+"displayName": "Ball State Cardinals",
+"shortDisplayName": "Ball State"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Toledo",
+"name": "Rockets",
+"abbreviation": "TOL",
+"displayName": "Toledo Rockets",
+"shortDisplayName": "Toledo"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858473",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Iowa",
+"name": "Hawkeyes",
+"abbreviation": "IOWA",
+"displayName": "Iowa Hawkeyes",
+"shortDisplayName": "Iowa"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Ohio State",
+"name": "Buckeyes",
+"abbreviation": "OSU",
+"displayName": "Ohio State Buckeyes",
+"shortDisplayName": "Ohio State"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856708",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Missouri",
+"name": "Tigers",
+"abbreviation": "MIZ",
+"displayName": "Missouri Tigers",
+"shortDisplayName": "Missouri"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Florida",
+"name": "Gators",
+"abbreviation": "FLA",
+"displayName": "Florida Gators",
+"shortDisplayName": "Florida"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856710",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Tennessee",
+"name": "Volunteers",
+"abbreviation": "TENN",
+"displayName": "Tennessee Volunteers",
+"shortDisplayName": "Tennessee"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Auburn",
+"name": "Tigers",
+"abbreviation": "AUB",
+"displayName": "Auburn Tigers",
+"shortDisplayName": "Auburn"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858247",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "UNLV",
+"name": "Rebels",
+"abbreviation": "UNLV",
+"displayName": "UNLV Rebels",
+"shortDisplayName": "UNLV"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "California",
+"name": "Golden Bears",
+"abbreviation": "CAL",
+"displayName": "California Golden Bears",
+"shortDisplayName": "California"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858248",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "NC State",
+"name": "Wolfpack",
+"abbreviation": "NCSU",
+"displayName": "NC State Wolfpack",
+"shortDisplayName": "NC State"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Louisville",
+"name": "Cardinals",
+"abbreviation": "LOU",
+"displayName": "Louisville Cardinals",
+"shortDisplayName": "Louisville"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858253",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Florida State",
+"name": "Seminoles",
+"abbreviation": "FSU",
+"displayName": "Florida State Seminoles",
+"shortDisplayName": "Florida St"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Virginia",
+"name": "Cavaliers",
+"abbreviation": "UVA",
+"displayName": "Virginia Cavaliers",
+"shortDisplayName": "Virginia"
+}
+}
+]
+}
+]
+},
+{
+"id": "401862793",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "UAB",
+"name": "Blazers",
+"abbreviation": "UAB",
+"displayName": "UAB Blazers",
+"shortDisplayName": "UAB"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Samford",
+"name": "Bulldogs",
+"abbreviation": "SAM",
+"displayName": "Samford Bulldogs",
+"shortDisplayName": "Samford"
+}
+}
+]
+}
+]
+},
+{
+"id": "401864515",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "North Dakota State",
+"name": "Bison",
+"abbreviation": "NDSU",
+"displayName": "North Dakota State Bison",
+"shortDisplayName": "N Dakota St"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Wyoming",
+"name": "Cowboys",
+"abbreviation": "WYO",
+"displayName": "Wyoming Cowboys",
+"shortDisplayName": "Wyoming"
+}
+}
+]
+}
+]
+},
+{
+"id": "401866430",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Central Michigan",
+"name": "Chippewas",
+"abbreviation": "CMU",
+"displayName": "Central Michigan Chippewas",
+"shortDisplayName": "C Michigan"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Akron",
+"name": "Zips",
+"abbreviation": "AKR",
+"displayName": "Akron Zips",
+"shortDisplayName": "Akron"
+}
+}
+]
+}
+]
+},
+{
+"id": "401866433",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Massachusetts",
+"name": "Minutemen",
+"abbreviation": "MASS",
+"displayName": "Massachusetts Minutemen",
+"shortDisplayName": "UMass"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Eastern Michigan",
+"name": "Eagles",
+"abbreviation": "EMU",
+"displayName": "Eastern Michigan Eagles",
+"shortDisplayName": "E Michigan"
+}
+}
+]
+}
+]
+},
+{
+"id": "401866434",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Kent State",
+"name": "Golden Flashes",
+"abbreviation": "KENT",
+"displayName": "Kent State Golden Flashes",
+"shortDisplayName": "Kent State"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Ohio",
+"name": "Bobcats",
+"abbreviation": "OHIO",
+"displayName": "Ohio Bobcats",
+"shortDisplayName": "Ohio"
+}
+}
+]
+}
+]
+},
+{
+"id": "401866477",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Miami (OH)",
+"name": "RedHawks",
+"abbreviation": "M-OH",
+"displayName": "Miami (OH) RedHawks",
+"shortDisplayName": "Miami OH"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Bowling Green",
+"name": "Falcons",
+"abbreviation": "BGSU",
+"displayName": "Bowling Green Falcons",
+"shortDisplayName": "Bowling Green"
+}
+}
+]
+}
+]
+},
+{
+"id": "401869956",
+"date": "2026-10-03T19:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Georgia State",
+"name": "Panthers",
+"abbreviation": "GAST",
+"displayName": "Georgia State Panthers",
+"shortDisplayName": "Georgia St"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Old Dominion",
+"name": "Monarchs",
+"abbreviation": "ODU",
+"displayName": "Old Dominion Monarchs",
+"shortDisplayName": "Old Dominion"
+}
+}
+]
+}
+]
+},
+{
+"id": "401869962",
+"date": "2026-10-03T19:45Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "James Madison",
+"name": "Dukes",
+"abbreviation": "JMU",
+"displayName": "James Madison Dukes",
+"shortDisplayName": "James Madison"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Marshall",
+"name": "Thundering Herd",
+"abbreviation": "MRSH",
+"displayName": "Marshall Thundering Herd",
+"shortDisplayName": "Marshall"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858475",
+"date": "2026-10-03T20:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Nebraska",
+"name": "Cornhuskers",
+"abbreviation": "NEB",
+"displayName": "Nebraska Cornhuskers",
+"shortDisplayName": "Nebraska"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Maryland",
+"name": "Terrapins",
+"abbreviation": "MD",
+"displayName": "Maryland Terrapins",
+"shortDisplayName": "Maryland"
+}
+}
+]
+}
+]
+},
+{
+"id": "401864514",
+"date": "2026-10-03T20:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "New Mexico",
+"name": "Lobos",
+"abbreviation": "UNM",
+"displayName": "New Mexico Lobos",
+"shortDisplayName": "New Mexico"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "UTEP",
+"name": "Miners",
+"abbreviation": "UTEP",
+"displayName": "UTEP Miners",
+"shortDisplayName": "UTEP"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856709",
+"date": "2026-10-03T20:15Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "South Carolina",
+"name": "Gamecocks",
+"abbreviation": "SC",
+"displayName": "South Carolina Gamecocks",
+"shortDisplayName": "South Carolina"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Kentucky",
+"name": "Wildcats",
+"abbreviation": "UK",
+"displayName": "Kentucky Wildcats",
+"shortDisplayName": "Kentucky"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858472",
+"date": "2026-10-03T20:15Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Illinois",
+"name": "Fighting Illini",
+"abbreviation": "ILL",
+"displayName": "Illinois Fighting Illini",
+"shortDisplayName": "Illinois"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Purdue",
+"name": "Boilermakers",
+"abbreviation": "PUR",
+"displayName": "Purdue Boilermakers",
+"shortDisplayName": "Purdue"
+}
+}
+]
+}
+]
+},
+{
+"id": "401860899",
+"date": "2026-10-03T22:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Colorado State",
+"name": "Rams",
+"abbreviation": "CSU",
+"displayName": "Colorado State Rams",
+"shortDisplayName": "Colorado St"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Oregon State",
+"name": "Beavers",
+"abbreviation": "ORST",
+"displayName": "Oregon State Beavers",
+"shortDisplayName": "Oregon St"
+}
+}
+]
+}
+]
+},
+{
+"id": "401862790",
+"date": "2026-10-03T22:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Florida Atlantic",
+"name": "Owls",
+"abbreviation": "FAU",
+"displayName": "Florida Atlantic Owls",
+"shortDisplayName": "FAU"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Texas Southern",
+"name": "Tigers",
+"abbreviation": "TXSO",
+"displayName": "Texas Southern Tigers",
+"shortDisplayName": "Texas Southern"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856818",
+"date": "2026-10-03T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "TCU",
+"name": "Horned Frogs",
+"abbreviation": "TCU",
+"displayName": "TCU Horned Frogs",
+"shortDisplayName": "TCU"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "BYU",
+"name": "Cougars",
+"abbreviation": "BYU",
+"displayName": "BYU Cougars",
+"shortDisplayName": "BYU"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856711",
+"date": "2026-10-03T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Texas A&M",
+"name": "Aggies",
+"abbreviation": "TA&M",
+"displayName": "Texas A&M Aggies",
+"shortDisplayName": "Texas A&M"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Arkansas",
+"name": "Razorbacks",
+"abbreviation": "ARK",
+"displayName": "Arkansas Razorbacks",
+"shortDisplayName": "Arkansas"
+}
+}
+]
+}
+]
+},
+{
+"id": "401862788",
+"date": "2026-10-03T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Rice",
+"name": "Owls",
+"abbreviation": "RICE",
+"displayName": "Rice Owls",
+"shortDisplayName": "Rice"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "UTSA",
+"name": "Roadrunners",
+"abbreviation": "UTSA",
+"displayName": "UTSA Roadrunners",
+"shortDisplayName": "UTSA"
+}
+}
+]
+}
+]
+},
+{
+"id": "401869942",
+"date": "2026-10-03T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Coastal Carolina",
+"name": "Chanticleers",
+"abbreviation": "CCU",
+"displayName": "Coastal Carolina Chanticleers",
+"shortDisplayName": "Coastal"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Georgia Southern",
+"name": "Eagles",
+"abbreviation": "GASO",
+"displayName": "Georgia Southern Eagles",
+"shortDisplayName": "GA Southern"
+}
+}
+]
+}
+]
+},
+{
+"id": "401871089",
+"date": "2026-10-03T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "South Alabama",
+"name": "Jaguars",
+"abbreviation": "USA",
+"displayName": "South Alabama Jaguars",
+"shortDisplayName": "South Alabama"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "UL Monroe",
+"name": "Warhawks",
+"abbreviation": "ULM",
+"displayName": "UL Monroe Warhawks",
+"shortDisplayName": "UL Monroe"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858249",
+"date": "2026-10-03T23:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Clemson",
+"name": "Tigers",
+"abbreviation": "CLEM",
+"displayName": "Clemson Tigers",
+"shortDisplayName": "Clemson"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Miami",
+"name": "Hurricanes",
+"abbreviation": "MIA",
+"displayName": "Miami Hurricanes",
+"shortDisplayName": "Miami"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856821",
+"date": "2026-10-03T23:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Colorado",
+"name": "Buffaloes",
+"abbreviation": "COLO",
+"displayName": "Colorado Buffaloes",
+"shortDisplayName": "Colorado"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Texas Tech",
+"name": "Red Raiders",
+"abbreviation": "TTU",
+"displayName": "Texas Tech Red Raiders",
+"shortDisplayName": "Texas Tech"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858478",
+"date": "2026-10-03T23:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "USC",
+"name": "Trojans",
+"abbreviation": "USC",
+"displayName": "USC Trojans",
+"shortDisplayName": "USC"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Washington",
+"name": "Huskies",
+"abbreviation": "WASH",
+"displayName": "Washington Huskies",
+"shortDisplayName": "Washington"
+}
+}
+]
+}
+]
+},
+{
+"id": "401860898",
+"date": "2026-10-03T23:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Boise State",
+"name": "Broncos",
+"abbreviation": "BOIS",
+"displayName": "Boise State Broncos",
+"shortDisplayName": "Boise St"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Utah State",
+"name": "Aggies",
+"abbreviation": "USU",
+"displayName": "Utah State Aggies",
+"shortDisplayName": "Utah State"
+}
+}
+]
+}
+]
+},
+{
+"id": "401862792",
+"date": "2026-10-03T23:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "South Florida",
+"name": "Bulls",
+"abbreviation": "USF",
+"displayName": "South Florida Bulls",
+"shortDisplayName": "South Florida"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Temple",
+"name": "Owls",
+"abbreviation": "TEM",
+"displayName": "Temple Owls",
+"shortDisplayName": "Temple"
+}
+}
+]
+}
+]
+},
+{
+"id": "401869842",
+"date": "2026-10-03T23:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Louisiana Tech",
+"name": "Bulldogs",
+"abbreviation": "LT",
+"displayName": "Louisiana Tech Bulldogs",
+"shortDisplayName": "Louisiana Tech"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Army",
+"name": "Black Knights",
+"abbreviation": "ARMY",
+"displayName": "Army Black Knights",
+"shortDisplayName": "Army"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856706",
+"date": "2026-10-03T23:45Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "LSU",
+"name": "Tigers",
+"abbreviation": "LSU",
+"displayName": "LSU Tigers",
+"shortDisplayName": "LSU"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "McNeese",
+"name": "Cowboys",
+"abbreviation": "MCN",
+"displayName": "McNeese Cowboys",
+"shortDisplayName": "McNeese"
+}
+}
+]
+}
+]
+},
+{
+"id": "401858477",
+"date": "2026-10-04T00:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Rutgers",
+"name": "Scarlet Knights",
+"abbreviation": "RUTG",
+"displayName": "Rutgers Scarlet Knights",
+"shortDisplayName": "Rutgers"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Indiana",
+"name": "Hoosiers",
+"abbreviation": "IU",
+"displayName": "Indiana Hoosiers",
+"shortDisplayName": "Indiana"
+}
+}
+]
+}
+]
+},
+{
+"id": "401869932",
+"date": "2026-10-04T00:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Louisiana",
+"name": "Ragin' Cajuns",
+"abbreviation": "UL",
+"displayName": "Louisiana Ragin' Cajuns",
+"shortDisplayName": "Louisiana"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Arkansas State",
+"name": "Red Wolves",
+"abbreviation": "ARST",
+"displayName": "Arkansas State Red Wolves",
+"shortDisplayName": "Arkansas St"
+}
+}
+]
+}
+]
+},
+{
+"id": "401860921",
+"date": "2026-10-04T01:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Washington State",
+"name": "Cougars",
+"abbreviation": "WSU",
+"displayName": "Washington State Cougars",
+"shortDisplayName": "Washington St"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Fresno State",
+"name": "Bulldogs",
+"abbreviation": "FRES",
+"displayName": "Fresno State Bulldogs",
+"shortDisplayName": "Fresno St"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856817",
+"date": "2026-10-04T02:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Arizona State",
+"name": "Sun Devils",
+"abbreviation": "ASU",
+"displayName": "Arizona State Sun Devils",
+"shortDisplayName": "Arizona St"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Baylor",
+"name": "Bears",
+"abbreviation": "BAY",
+"displayName": "Baylor Bears",
+"shortDisplayName": "Baylor"
+}
+}
+]
+}
+]
+},
+{
+"id": "401860900",
+"date": "2026-10-04T02:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "San Diego State",
+"name": "Aztecs",
+"abbreviation": "SDSU",
+"displayName": "San Diego State Aztecs",
+"shortDisplayName": "San Diego St"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Texas State",
+"name": "Bobcats",
+"abbreviation": "TXST",
+"displayName": "Texas State Bobcats",
+"shortDisplayName": "Texas St"
+}
+}
+]
+}
+]
+},
+{
+"id": "401856820",
+"date": "2026-10-04T03:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Arizona",
+"name": "Wildcats",
+"abbreviation": "ARIZ",
+"displayName": "Arizona Wildcats",
+"shortDisplayName": "Arizona"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Cincinnati",
+"name": "Bearcats",
+"abbreviation": "CIN",
+"displayName": "Cincinnati Bearcats",
+"shortDisplayName": "Cincinnati"
+}
+}
+]
+}
+]
+},
+{
+"id": "401864513",
+"date": "2026-10-04T03:59Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Hawai'i",
+"name": "Rainbow Warriors",
+"abbreviation": "HAW",
+"displayName": "Hawai'i Rainbow Warriors",
+"shortDisplayName": "Hawai'i"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "San Jos\u00e9 State",
+"name": "Spartans",
+"abbreviation": "SJSU",
+"displayName": "San Jos\u00e9 State Spartans",
+"shortDisplayName": "San Jos\u00e9 St"
+}
+}
+]
+}
+]
+}
+]
+}

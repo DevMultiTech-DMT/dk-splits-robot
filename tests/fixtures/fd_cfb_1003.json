@@ -1,0 +1,1710 @@
+[
+{
+"id": "9b2bcb758c7d7f4cb25d5102e4e9068e",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T15:00:00Z",
+"home_team": "Charlotte 49ers",
+"away_team": "Memphis Tigers",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Charlotte 49ers",
+"price": 890
+},
+{
+"name": "Memphis Tigers",
+"price": -1700
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "4fcb5b7ec04cad7acc5d048bdd24be4c",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T16:00:00Z",
+"home_team": "Air Force Falcons",
+"away_team": "Navy Midshipmen",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Air Force Falcons",
+"price": -154
+},
+{
+"name": "Navy Midshipmen",
+"price": 128
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "6b22daf46195be6b3748584efe89dac1",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T16:00:00Z",
+"home_team": "Mississippi State Bulldogs",
+"away_team": "Alabama Crimson Tide",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:35Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Alabama Crimson Tide",
+"price": -196
+},
+{
+"name": "Mississippi State Bulldogs",
+"price": 162
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "36357c80707ce0c3a645afe495b28bbd",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T16:00:00Z",
+"home_team": "SMU Mustangs",
+"away_team": "Boston College Eagles",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Boston College Eagles",
+"price": 980
+},
+{
+"name": "SMU Mustangs",
+"price": -2000
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "11c2108f1d7c8fb56c8a6c7fcd9b62bf",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T16:00:00Z",
+"home_team": "Houston Cougars",
+"away_team": "UCF Knights",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Houston Cougars",
+"price": -465
+},
+{
+"name": "UCF Knights",
+"price": 350
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "7bdd5ae18979fa3af61625a21d757987",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T16:00:00Z",
+"home_team": "Iowa State Cyclones",
+"away_team": "West Virginia Mountaineers",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Iowa State Cyclones",
+"price": -152
+},
+{
+"name": "West Virginia Mountaineers",
+"price": 126
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "38e6b42c07f8da2e57e0b4dd09d6174c",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T16:00:00Z",
+"home_team": "Kansas Jayhawks",
+"away_team": "Middle Tennessee Blue Raiders",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Kansas Jayhawks",
+"price": -1400
+},
+{
+"name": "Middle Tennessee Blue Raiders",
+"price": 800
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "a2f01448219e39fd44e3d98ea5c7f482",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T16:00:00Z",
+"home_team": "Minnesota Golden Gophers",
+"away_team": "Michigan Wolverines",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:35Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Michigan Wolverines",
+"price": -230
+},
+{
+"name": "Minnesota Golden Gophers",
+"price": 188
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "2b8db5053d533b488c0d76f49382d219",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T16:00:00Z",
+"home_team": "North Carolina Tar Heels",
+"away_team": "Notre Dame Fighting Irish",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:35Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "North Carolina Tar Heels",
+"price": 1000
+},
+{
+"name": "Notre Dame Fighting Irish",
+"price": -2100
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "8ef32c906348e926ca0fabcc25635c11",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T16:00:00Z",
+"home_team": "Wake Forest Demon Deacons",
+"away_team": "Stanford Cardinal",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Stanford Cardinal",
+"price": 460
+},
+{
+"name": "Wake Forest Demon Deacons",
+"price": -650
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "94769faaa7a5aba0474291fc9c2d3d6d",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T16:00:00Z",
+"home_team": "UConn Huskies",
+"away_team": "Syracuse Orange",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Syracuse Orange",
+"price": -245
+},
+{
+"name": "UConn Huskies",
+"price": 198
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "575f5abb1af3a81091ac5a1cf1f5f927",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T16:30:00Z",
+"home_team": "Wisconsin Badgers",
+"away_team": "Michigan State Spartans",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Michigan State Spartans",
+"price": 315
+},
+{
+"name": "Wisconsin Badgers",
+"price": -410
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "46e1be6476ed577d1b5194b46b27c643",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T16:45:00Z",
+"home_team": "Georgia Bulldogs",
+"away_team": "Vanderbilt Commodores",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:35Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Georgia Bulldogs",
+"price": -4500
+},
+{
+"name": "Vanderbilt Commodores",
+"price": 1600
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "031ad65ec032d459cda2cee30378e4a4",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T17:00:00Z",
+"home_team": "Buffalo Bulls",
+"away_team": "Western Michigan Broncos",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Buffalo Bulls",
+"price": 400
+},
+{
+"name": "Western Michigan Broncos",
+"price": -550
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "c3437a49d4efdbca5669e7edfb5af569",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T18:00:00Z",
+"home_team": "Ball State Cardinals",
+"away_team": "Toledo Rockets",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Ball State Cardinals",
+"price": 890
+},
+{
+"name": "Toledo Rockets",
+"price": -1700
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "afbc95d529430ef9797b428b2a9db1ab",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "Central Michigan Chippewas",
+"away_team": "Akron Zips",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Akron Zips",
+"price": 198
+},
+{
+"name": "Central Michigan Chippewas",
+"price": -245
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "f2defdeeb6cb3aa4a86b01a7a5b1ece4",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "Tennessee Volunteers",
+"away_team": "Auburn Tigers",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:35Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Auburn Tigers",
+"price": 220
+},
+{
+"name": "Tennessee Volunteers",
+"price": -275
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "766a0470521ac4a0fad476df45c1438b",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "Miami (OH) RedHawks",
+"away_team": "Bowling Green Falcons",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Bowling Green Falcons",
+"price": 400
+},
+{
+"name": "Miami (OH) RedHawks",
+"price": -550
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "f28938b05f7d4b4187e879917f6e583a",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "UNLV Rebels",
+"away_team": "California Golden Bears",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "California Golden Bears",
+"price": 105
+},
+{
+"name": "UNLV Rebels",
+"price": -126
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "7e0abfe1077b7d41d61b918ef53d247b",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "UMass Minutemen",
+"away_team": "Eastern Michigan Eagles",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Eastern Michigan Eagles",
+"price": 172
+},
+{
+"name": "UMass Minutemen",
+"price": -210
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "6d39ea01c532535edf756b8086656518",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "Missouri Tigers",
+"away_team": "Florida Gators",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Florida Gators",
+"price": -215
+},
+{
+"name": "Missouri Tigers",
+"price": 176
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "296c3e1c69d11f640690b6f9bd37d424",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "Florida State Seminoles",
+"away_team": "Virginia Cavaliers",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Florida State Seminoles",
+"price": 100
+},
+{
+"name": "Virginia Cavaliers",
+"price": -120
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "e4f058459f5ee64f3cff3ac1aed79e64",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "Georgia State Panthers",
+"away_team": "Old Dominion Monarchs",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Georgia State Panthers",
+"price": -128
+},
+{
+"name": "Old Dominion Monarchs",
+"price": 106
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "b163da8a283ade5bd6428a3ca01da8b8",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "Iowa Hawkeyes",
+"away_team": "Ohio State Buckeyes",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:35Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Iowa Hawkeyes",
+"price": 490
+},
+{
+"name": "Ohio State Buckeyes",
+"price": -710
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "c1c548c80e674e3a37dcc2551beba599",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "Kent State Golden Flashes",
+"away_team": "Ohio Bobcats",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Kent State Golden Flashes",
+"price": 140
+},
+{
+"name": "Ohio Bobcats",
+"price": -170
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "a77fd3143159a9d16a75685528d9960b",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "NC State Wolfpack",
+"away_team": "Louisville Cardinals",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:35Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Louisville Cardinals",
+"price": -160
+},
+{
+"name": "NC State Wolfpack",
+"price": 132
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "b36c1d83299d019b7833660a29e9da9c",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "North Dakota State Bison",
+"away_team": "Wyoming Cowboys",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "North Dakota State Bison",
+"price": -1100
+},
+{
+"name": "Wyoming Cowboys",
+"price": 680
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "3086203ed472e204ff7f3ba6241bb43c",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:30:00Z",
+"home_team": "UAB Blazers",
+"away_team": "Samford Bulldogs",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Samford Bulldogs",
+"price": 2200
+},
+{
+"name": "UAB Blazers",
+"price": -8000
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "7e365956ef23823565a044a5af18736a",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T19:45:00Z",
+"home_team": "James Madison Dukes",
+"away_team": "Marshall Thundering Herd",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "James Madison Dukes",
+"price": -1100
+},
+{
+"name": "Marshall Thundering Herd",
+"price": 680
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "0e62429ed73f84f87f603d376477749c",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T20:00:00Z",
+"home_team": "Nebraska Cornhuskers",
+"away_team": "Maryland Terrapins",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Maryland Terrapins",
+"price": 470
+},
+{
+"name": "Nebraska Cornhuskers",
+"price": -650
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "e7e3e3bfc3fd7fca7550ecf48cb78666",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T20:00:00Z",
+"home_team": "New Mexico Lobos",
+"away_team": "UTEP Miners",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "New Mexico Lobos",
+"price": -2500
+},
+{
+"name": "UTEP Miners",
+"price": 1100
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "0cdf52fe0d6bfe0664b76a2102f8b605",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T20:15:00Z",
+"home_team": "Illinois Fighting Illini",
+"away_team": "Purdue Boilermakers",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Illinois Fighting Illini",
+"price": -410
+},
+{
+"name": "Purdue Boilermakers",
+"price": 315
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "59abc1d6262d2ea6a72c4daad4c83af2",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T20:15:00Z",
+"home_team": "South Carolina Gamecocks",
+"away_team": "Kentucky Wildcats",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Kentucky Wildcats",
+"price": 120
+},
+{
+"name": "South Carolina Gamecocks",
+"price": -144
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "b30387175520051e2889230030365494",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T22:00:00Z",
+"home_team": "Colorado State Rams",
+"away_team": "Oregon State Beavers",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Colorado State Rams",
+"price": 198
+},
+{
+"name": "Oregon State Beavers",
+"price": -245
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "b3c132063b4d14cf750801c633237b9e",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T22:00:00Z",
+"home_team": "Florida Atlantic Owls",
+"away_team": "Texas Southern Tigers",
+"bookmakers": []
+},
+{
+"id": "ff98b80b07e2f42c76c2c255e6611247",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T23:00:00Z",
+"home_team": "Texas A&M Aggies",
+"away_team": "Arkansas Razorbacks",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Arkansas Razorbacks",
+"price": 480
+},
+{
+"name": "Texas A&M Aggies",
+"price": -690
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "b58c0d24e66471e6095c0a5f9afb7ce3",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T23:00:00Z",
+"home_team": "TCU Horned Frogs",
+"away_team": "BYU Cougars",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "BYU Cougars",
+"price": -220
+},
+{
+"name": "TCU Horned Frogs",
+"price": 180
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "5efdb3515c882453d9abcd27db28f78b",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T23:00:00Z",
+"home_team": "Coastal Carolina Chanticleers",
+"away_team": "Georgia Southern Eagles",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Coastal Carolina Chanticleers",
+"price": 102
+},
+{
+"name": "Georgia Southern Eagles",
+"price": -122
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "279230b2d38c4e97187c3f065501a4cf",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T23:00:00Z",
+"home_team": "Rice Owls",
+"away_team": "UTSA Roadrunners",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Rice Owls",
+"price": 385
+},
+{
+"name": "UTSA Roadrunners",
+"price": -520
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "4c84a699496b71ee1e626e3c7f5689c9",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T23:00:00Z",
+"home_team": "South Alabama Jaguars",
+"away_team": "UL Monroe Warhawks",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "South Alabama Jaguars",
+"price": -650
+},
+{
+"name": "UL Monroe Warhawks",
+"price": 460
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "6246661a676eeaa850a3e36e311fce63",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T23:30:00Z",
+"home_team": "Louisiana Tech Bulldogs",
+"away_team": "Army Black Knights",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Army Black Knights",
+"price": -126
+},
+{
+"name": "Louisiana Tech Bulldogs",
+"price": 105
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "a2f7df0b000c054abd3cbc6f4a4b2432",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T23:30:00Z",
+"home_team": "Boise State Broncos",
+"away_team": "Utah State Aggies",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Boise State Broncos",
+"price": -1400
+},
+{
+"name": "Utah State Aggies",
+"price": 800
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "932c7f6dfe06be77192fe000e9f3ac9d",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T23:30:00Z",
+"home_team": "Clemson Tigers",
+"away_team": "Miami Hurricanes",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:35Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Clemson Tigers",
+"price": 500
+},
+{
+"name": "Miami Hurricanes",
+"price": -720
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "6338f8a71aba32414791add2d358472d",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T23:30:00Z",
+"home_team": "South Florida Bulls",
+"away_team": "Temple Owls",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "South Florida Bulls",
+"price": -235
+},
+{
+"name": "Temple Owls",
+"price": 190
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "f981648dba0e71d8517d47d31aa2633d",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T23:30:00Z",
+"home_team": "USC Trojans",
+"away_team": "Washington Huskies",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "USC Trojans",
+"price": -360
+},
+{
+"name": "Washington Huskies",
+"price": 280
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "253e389201e449a2984a194e3eebf7f8",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T23:31:00Z",
+"home_team": "Colorado Buffaloes",
+"away_team": "Texas Tech Red Raiders",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Colorado Buffaloes",
+"price": 390
+},
+{
+"name": "Texas Tech Red Raiders",
+"price": -530
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "833bd3a9f5a0da5b303a6a4304e2c6a3",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-03T23:45:00Z",
+"home_team": "LSU Tigers",
+"away_team": "McNeese State Cowboys",
+"bookmakers": []
+},
+{
+"id": "1d3756ab74c013c39510958b5a632b74",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-04T00:00:00Z",
+"home_team": "Louisiana Ragin Cajuns",
+"away_team": "Arkansas State Red Wolves",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Arkansas State Red Wolves",
+"price": 184
+},
+{
+"name": "Louisiana Ragin Cajuns",
+"price": -225
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "9dcccf34095cde7b0fe36250bb5be6f6",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-04T00:00:00Z",
+"home_team": "Rutgers Scarlet Knights",
+"away_team": "Indiana Hoosiers",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Indiana Hoosiers",
+"price": -3000
+},
+{
+"name": "Rutgers Scarlet Knights",
+"price": 1200
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "23025b717a93bdd8f30424e90a97d68f",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-04T01:30:00Z",
+"home_team": "Washington State Cougars",
+"away_team": "Fresno State Bulldogs",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Fresno State Bulldogs",
+"price": 100
+},
+{
+"name": "Washington State Cougars",
+"price": -120
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "4ec93b02d04c2a019ebd6f4ccd9f7af5",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-04T02:30:00Z",
+"home_team": "Arizona State Sun Devils",
+"away_team": "Baylor Bears",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Arizona State Sun Devils",
+"price": -178
+},
+{
+"name": "Baylor Bears",
+"price": 146
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "f73081099f845f23ea7f41ef09128cdd",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-04T02:30:00Z",
+"home_team": "San Diego State Aztecs",
+"away_team": "Texas State Bobcats",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "San Diego State Aztecs",
+"price": 255
+},
+{
+"name": "Texas State Bobcats",
+"price": -320
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "63dded0ee467d6f6d03c41673569238d",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-04T03:00:00Z",
+"home_team": "Arizona Wildcats",
+"away_team": "Cincinnati Bearcats",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Arizona Wildcats",
+"price": -245
+},
+{
+"name": "Cincinnati Bearcats",
+"price": 198
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "4d9e59b57798afb31927c84e1f6dc25e",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-04T03:59:00Z",
+"home_team": "Hawaii Rainbow Warriors",
+"away_team": "San Jose State Spartans",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Hawaii Rainbow Warriors",
+"price": -150
+},
+{
+"name": "San Jose State Spartans",
+"price": 125
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "57ad14afc7db1843fd56f5971dadb058",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-07T00:00:00Z",
+"home_team": "Troy Trojans",
+"away_team": "Southern Mississippi Golden Eagles",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Southern Mississippi Golden Eagles",
+"price": 280
+},
+{
+"name": "Troy Trojans",
+"price": -360
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "c89488b9c83038e85e02e92481d093fe",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-07T23:00:00Z",
+"home_team": "Kennesaw State Owls",
+"away_team": "Jacksonville State Gamecocks",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Jacksonville State Gamecocks",
+"price": -154
+},
+{
+"name": "Kennesaw State Owls",
+"price": 128
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "9aa0a267b153a6cc0d6c3e5746e78213",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-07T23:30:00Z",
+"home_team": "Florida International Panthers",
+"away_team": "New Mexico State Aggies",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Florida International Panthers",
+"price": -178
+},
+{
+"name": "New Mexico State Aggies",
+"price": 146
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "a168f1bed30ce7d56dc2b77dbfe37705",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-10T01:00:00Z",
+"home_team": "Washington Huskies",
+"away_team": "Iowa Hawkeyes",
+"bookmakers": []
+},
+{
+"id": "55d9636153ca5741d460ef2f78b663d9",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-10T02:15:00Z",
+"home_team": "BYU Cougars",
+"away_team": "Iowa State Cyclones",
+"bookmakers": []
+},
+{
+"id": "3e691b53c660a64495a44816768176e8",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-10T16:00:00Z",
+"home_team": "Nebraska Cornhuskers",
+"away_team": "Indiana Hoosiers",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Indiana Hoosiers",
+"price": -315
+},
+{
+"name": "Nebraska Cornhuskers",
+"price": 250
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "9383cbbbb905d9ee50a3341f6945eae7",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-10T17:00:00Z",
+"home_team": "Florida Gators",
+"away_team": "South Carolina Gamecocks",
+"bookmakers": []
+},
+{
+"id": "9e243e91f8f94e6431da5cc5c3cc8fda",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-10T17:00:00Z",
+"home_team": "Missouri Tigers",
+"away_team": "Texas A&M Aggies",
+"bookmakers": []
+},
+{
+"id": "82b83ec87fc2be5faa2e9f26ac50edef",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-10T19:30:00Z",
+"home_team": "Oklahoma Sooners",
+"away_team": "Texas Longhorns",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:35Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Oklahoma Sooners",
+"price": 300
+},
+{
+"name": "Texas Longhorns",
+"price": -385
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "3ad908e99942c191b72d855b6f1b508f",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-10T19:30:00Z",
+"home_team": "Oregon Ducks",
+"away_team": "UCLA Bruins",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:36Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Oregon Ducks",
+"price": -530
+},
+{
+"name": "UCLA Bruins",
+"price": 390
+}
+]
+}
+]
+}
+]
+},
+{
+"id": "bdfaffbf5873812f3e04de2cbd273aa6",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-10T23:00:00Z",
+"home_team": "Kentucky Wildcats",
+"away_team": "LSU Tigers",
+"bookmakers": []
+},
+{
+"id": "59f8c98dee8ce77cc17c5b4958e4f325",
+"sport_key": "americanfootball_ncaaf",
+"commence_time": "2026-10-10T23:30:00Z",
+"home_team": "Alabama Crimson Tide",
+"away_team": "Georgia Bulldogs",
+"bookmakers": [
+{
+"key": "fanduel",
+"last_update": "2026-10-03T05:04:35Z",
+"markets": [
+{
+"key": "h2h",
+"outcomes": [
+{
+"name": "Alabama Crimson Tide",
+"price": 112
+},
+{
+"name": "Georgia Bulldogs",
+"price": -134
+}
+]
+}
+]
+}
+]
+}
+]

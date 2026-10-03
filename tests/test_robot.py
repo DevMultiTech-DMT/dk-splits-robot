@@ -1,14 +1,14 @@
-"""Robot tests, built on REAL pages saved on 9/26 (tests/fixtures/).
+"""Robot tests, built on REAL pages saved on 9/26 and 10/3 (tests/fixtures/).
 
-  python -m unittest discover -s tests -v
+  python -m unittest discover -s tests -t . -v
 """
 import json
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from robot import dk, main, official, store
-from robot.match import match_game, team_split
+from robot import dk, fanduel, main, official, store
+from robot.match import match_game, match_teams, team_split
 
 FIX = Path(__file__).parent / "fixtures"
 NOW = datetime(2026, 9, 26, 16, 0, tzinfo=timezone.utc)  # 12:00 PM ET, before every fixture game
@@ -183,6 +183,12 @@ class FakeFirestore:
         for k in old:
             del self.docs[k]
         return len(old)
+
+    def get_state(self):
+        return dict(self.docs.get(store.STATE_DOC, {}))
+
+    def set_state(self, st):
+        self.docs[store.STATE_DOC] = {**self.docs.get(store.STATE_DOC, {}), **st}
 
 
 def row(when, bets, money, key="MLB-824219", phase="sweep"):

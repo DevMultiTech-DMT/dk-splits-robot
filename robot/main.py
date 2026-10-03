@@ -22,8 +22,8 @@ import time
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 
-from . import dk, official, store
-from .match import match_game, team_split, total_split
+from . import dk, fanduel, official, store
+from .match import match_game, match_teams, team_split, total_split
 
 HORIZON = timedelta(minutes=40)
 LEADS = (15, 10)
@@ -124,7 +124,102 @@ def grab(sports, games, now, only: dict[str, str] | None, log, fetch_league=None
     return rows
 
 
-def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.sleep, clock=utcnow) -> int:
+def _parse_iso(s: str) -> datetime:
+    return datetime.fromisoformat(s.replace("Z", "+00:00"))
+
+
+class FanDuelPuller:
+    """FanDuel moneylines for one run: budget, pull, match, save. OFF without a key.
+
+    Budget state (today's credits used, last pull per sport, today's cap) lives in the
+    `_robot_state` doc, which carries `day` and so is cleared at midnight like the rest."""
+
+    def __init__(self, key, fs, games, day_s, log, fetch=None, credits_fn=None):
+        self.key, self.fs, self.games, self.day_s, self.log = key, fs, games, day_s, log
+        self.fetch = fetch or fanduel.fetch
+        self.lines: list[dict] = []
+        self.credits: int | None = None
+        self.state: dict = {}
+        self.on = bool(key)
+        if not self.on:
+            return
+        try:
+            self.credits = (credits_fn or fanduel.credits_left)(key)
+        except Exception as e:
+            log(f"  FanDuel: key check FAILED ({e}) - no odds this run")
+            self.on = False
+            return
+        st = fs.get_state() if fs else {}
+        if st.get("day") != day_s:
+            st = {"day": day_s, "oddsUsed": 0, "lastPull": {}, "oddsCap": fanduel.day_cap(self.credits or 0)}
+        self.state = st
+        log(f"  FanDuel: ON | {self.credits} credits left | today's cap {st['oddsCap']}, used {st['oddsUsed']}")
+
+    def kind_for_sweep(self, sport: str, now: datetime) -> str | None:
+        """'morning' while any of today's games still lacks a morning line, else 'refresh'."""
+        keys = [g.key for g in self.games.get(sport, []) if eligible(g, now)]
+        if not keys:
+            return None
+        if not self.fs:
+            return "morning"
+        ex = self.fs.existing(keys)
+        return "morning" if any(not ex.get(k, {}).get("fdMorningAt") for k in keys) else "refresh"
+
+    def pull(self, sport: str, kind: str, now: datetime) -> None:
+        if not self.on:
+            return
+        st = self.state
+        last = st.setdefault("lastPull", {}).get(sport)
+        gap = now - _parse_iso(last) if last else None
+        if gap is not None and (gap < fanduel.MIN_GAP or (kind == "refresh" and gap < fanduel.REFRESH_EVERY)):
+            return
+        if not fanduel.allowed(kind, st.get("oddsUsed", 0), st.get("oddsCap", 0), self.credits):
+            self.log(f"  FanDuel {sport}: {kind} pull skipped (budget: used {st.get('oddsUsed', 0)} of "
+                     f"{st.get('oddsCap', 0)} today, {self.credits} left)")
+            return
+        elig = [g for g in self.games.get(sport, []) if eligible(g, now)]
+        if not elig:
+            return
+        to = max(g.start_utc for g in elig) + timedelta(minutes=30)
+        try:
+            events, rem = self.fetch(sport, self.key, now, to)
+        except Exception as e:
+            self.log(f"  FanDuel {sport}: pull FAILED ({e})")
+            return
+        cost = (self.credits - rem) if (rem is not None and self.credits is not None) else (1 if events else 0)
+        if rem is not None:
+            self.credits = rem
+        st["oddsUsed"] = st.get("oddsUsed", 0) + max(cost, 0)
+        st["lastPull"][sport] = store.iso(now)
+        matched = []
+        for e in events:
+            m = match_teams(sport, e.away, e.home, e.start_utc, elig)
+            if not m or not eligible(m.game, now):
+                continue
+            # prices follow the TEAM: a neutral-site game listed the other way round is flipped back
+            ml_away, ml_home = (e.ml_home, e.ml_away) if m.flipped else (e.ml_away, e.ml_home)
+            matched.append((m.game, ml_away, ml_home, e.book_at))
+        if self.fs:
+            ex = self.fs.existing([g.key for g, *_ in matched])
+            docs = [
+                store.build_fd_doc(
+                    key=g.key, sport=sport, game_id=g.game_id, start_utc=store.iso(g.start_utc),
+                    ml_away=a, ml_home=h, grabbed_at=store.iso(now), book_at=b,
+                    existing=ex.get(g.key), day=self.day_s,
+                )
+                for g, a, h, b in matched
+            ]
+            self.fs.write(docs)
+            self.fs.set_state(st)
+        for g, a, h, _ in matched:
+            self.lines.append({"sport": sport, "game": f"{g.away.abbr} @ {g.home.abbr}", "start": g.start_utc,
+                               "kind": kind, "away": a, "home": h})
+        self.log(f"  FanDuel {sport} ({kind}): {len(matched)} game(s) matched of {len(events)}, "
+                 f"cost {cost}, {self.credits} credits left")
+
+
+def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.sleep, clock=utcnow,
+        with_odds: bool = False) -> int:
     now = clock()
     day = slate_day(now)
     log(f"Robot run {store.iso(now)} | slate {day} | {'DRY RUN (saves nothing)' if dry_run else 'LIVE'}")
@@ -159,6 +254,17 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
 
     save(grab(active, games, now, None, log), "sweep")
 
+    # FanDuel moneylines: only with the ODDS_API_KEY secret; a look-only run spends
+    # credits only when asked (--with-odds)
+    odds_key = os.environ.get("ODDS_API_KEY", "").strip() if (with_odds or not dry_run) else ""
+    if not odds_key and not dry_run:
+        log("  FanDuel: OFF (no ODDS_API_KEY)")
+    fd = FanDuelPuller(odds_key, fs, games, day_s, log)
+    for s in active:
+        kind = fd.kind_for_sweep(s, now)
+        if kind:
+            fd.pull(s, kind, now)
+
     if wait:
         targets: dict[datetime, dict[str, str]] = defaultdict(dict)
         sport_of: dict[str, str] = {}
@@ -179,8 +285,12 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
             keys = targets[t]
             lg = sorted({sport_of[k] for k in keys})
             save(grab(lg, games, clock(), keys, log), "pre-game")
+            for s in lg:
+                phases = {p for k, p in keys.items() if sport_of[k] == s}
+                fd.pull(s, "T-10" if "T-10" in phases else "T-15", clock())
 
     summarize(all_rows, log)
+    summarize_fanduel(fd.lines, log)
     return 0
 
 
@@ -203,14 +313,46 @@ def summarize(rows: list[dict], log) -> None:
             f.write(text + "\n")
 
 
+def summarize_fanduel(lines: list[dict], log) -> None:
+    if not lines:
+        return
+    out = ["", "| Sport | Game (away @ home) | Start (ET) | When | FanDuel away | FanDuel home |", "|---|---|---|---|---|---|"]
+    fmt = lambda n: f"+{n}" if n > 0 else str(n)  # noqa: E731
+    for r in lines:
+        out.append(f"| {r['sport']} | {r['game']} | {r['start'].astimezone(dk.ET):%m/%d %I:%M %p} | {r['kind']} "
+                   f"| {fmt(r['away'])} | {fmt(r['home'])} |")
+    text = "\n".join(out)
+    log(text)
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary:
+        with open(summary, "a", encoding="utf-8") as f:
+            f.write(text + "\n")
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="DraftKings betting-splits robot")
     ap.add_argument("--dry-run", action="store_true", help="look only: print, save nothing")
     ap.add_argument("--no-wait", action="store_true", help="skip the pre-game waiting")
     ap.add_argument("--check-firebase", action="store_true",
                     help="prove the key works: write, read back and delete one throwaway doc")
+    ap.add_argument("--check-odds", action="store_true",
+                    help="prove the Odds API key works and show credits left (free: spends nothing)")
+    ap.add_argument("--with-odds", action="store_true",
+                    help="look-only runs also pull FanDuel (spends ~1 credit per sport)")
     ap.add_argument("--sports", default=",".join(official.SPORTS))
     a = ap.parse_args(argv)
+    if a.check_odds:
+        key = os.environ.get("ODDS_API_KEY", "").strip()
+        if not key:
+            print("Odds API check: NO KEY (ODDS_API_KEY secret missing)")
+            return 1
+        try:
+            left = fanduel.credits_left(key)
+        except Exception as e:
+            print(f"Odds API check: FAILED ({e})")
+            return 1
+        print(f"Odds API check: OK | {left} credits left | a day's budget at this level: {fanduel.day_cap(left or 0)}")
+        return 0
     if a.check_firebase:
         fs = store.firestore_from_env()
         if not fs:
@@ -220,7 +362,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Firebase check (project {fs.project}, collection {store.COLLECTION}): {result}")
         return 0 if result == "OK" else 1
     sports = [s.strip().upper() for s in a.sports.split(",") if s.strip()]
-    return run(a.dry_run, not a.no_wait, sports)
+    return run(a.dry_run, not a.no_wait, sports, with_odds=a.with_odds)
 
 
 if __name__ == "__main__":

@@ -3,6 +3,7 @@
 User's call 9/26: keep only the current day. Each game's doc holds the latest
 pre-start numbers plus the day's MORNING numbers (the first grab after
 midnight Eastern), and every doc from an earlier day is deleted on the next run.
+10/3: the same doc also carries FanDuel's moneylines (fd* fields), merged in.
 No history is kept anywhere else. The robot never writes any other collection:
 the app's `bets` / `props` / `mob` ledgers are off-limits.
 """
@@ -15,6 +16,7 @@ from datetime import datetime, timezone
 
 COLLECTION = "splits"  # the ONLY collection the robot may write
 CHECK_DOC = "_robot_check"  # self-test doc; never a game key, so the app never reads it
+STATE_DOC = "_robot_state"  # today's FanDuel credit use; carries `day`, so it resets at midnight
 
 
 def iso(dt: datetime) -> str:
@@ -103,6 +105,40 @@ def build_doc(row: dict, existing: dict | None, day: str) -> dict | None:
     return doc
 
 
+def _is_odds(v) -> bool:
+    return isinstance(v, int) and not isinstance(v, bool) and abs(v) >= 100
+
+
+def build_fd_doc(
+    *, key: str, sport: str, game_id: str, start_utc: str, ml_away: int, ml_home: int,
+    grabbed_at: str, book_at: str, existing: dict | None, day: str,
+) -> dict:
+    """FanDuel moneylines for one game, on the SAME doc as its DK splits (merged).
+    The day's first FanDuel pull is the MORNING line, kept all day like the splits."""
+    keep = (
+        existing is not None
+        and existing.get("day") == day
+        and _is_odds(existing.get("fdMorningAway"))
+        and _is_odds(existing.get("fdMorningHome"))
+        and isinstance(existing.get("fdMorningAt"), str)
+    )
+    return {
+        "day": day,
+        "sport": sport,
+        "gameId": game_id,
+        "key": key,
+        "startTime": start_utc,
+        "fdMlAway": ml_away,
+        "fdMlHome": ml_home,
+        "fdAt": grabbed_at,
+        "fdBookAt": book_at,
+        "fdMorningAway": existing["fdMorningAway"] if keep else ml_away,
+        "fdMorningHome": existing["fdMorningHome"] if keep else ml_home,
+        "fdMorningAt": existing["fdMorningAt"] if keep else grabbed_at,
+        "updatedAt": int(time.time() * 1000),
+    }
+
+
 class Firestore:
     """The robot's only door to the database. Built only when the key secret exists."""
 
@@ -156,6 +192,13 @@ class Firestore:
                 batch = self.db.batch()
         batch.commit()
         return n
+
+    def get_state(self) -> dict:
+        snap = self._col().document(STATE_DOC).get()
+        return (snap.to_dict() or {}) if snap.exists else {}
+
+    def set_state(self, state: dict) -> None:
+        self._col().document(STATE_DOC).set(state, merge=True)
 
     def self_test(self) -> str:
         """Write, read back, and delete one throwaway doc. Proves the key + permissions."""

@@ -1,0 +1,120 @@
+{
+"dates": [
+{
+"games": [
+{
+"gamePk": 849829,
+"gameDate": "2026-10-03T17:00:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Chicago White Sox",
+"teamName": "White Sox",
+"clubName": "White Sox",
+"shortName": "Chi White Sox",
+"abbreviation": "CWS"
+}
+},
+"home": {
+"team": {
+"name": "Cleveland Guardians",
+"teamName": "Guardians",
+"clubName": "Guardians",
+"shortName": "Cleveland",
+"abbreviation": "CLE"
+}
+}
+}
+},
+{
+"gamePk": 849828,
+"gameDate": "2026-10-03T20:00:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "Atlanta Braves",
+"teamName": "Braves",
+"clubName": "Braves",
+"shortName": "Atlanta",
+"abbreviation": "ATL"
+}
+},
+"home": {
+"team": {
+"name": "Los Angeles Dodgers",
+"teamName": "Dodgers",
+"clubName": "Dodgers",
+"shortName": "LA Dodgers",
+"abbreviation": "LAD"
+}
+}
+}
+},
+{
+"gamePk": 849835,
+"gameDate": "2026-10-03T22:30:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "New York Yankees",
+"teamName": "Yankees",
+"clubName": "Yankees",
+"shortName": "NY Yankees",
+"abbreviation": "NYY"
+}
+},
+"home": {
+"team": {
+"name": "Tampa Bay Rays",
+"teamName": "Rays",
+"clubName": "Rays",
+"shortName": "Tampa Bay",
+"abbreviation": "TB"
+}
+}
+}
+},
+{
+"gamePk": 849830,
+"gameDate": "2026-10-04T00:30:00Z",
+"status": {
+"abstractGameState": "Preview",
+"detailedState": "Scheduled"
+},
+"teams": {
+"away": {
+"team": {
+"name": "San Diego Padres",
+"teamName": "Padres",
+"clubName": "Padres",
+"shortName": "San Diego",
+"abbreviation": "SD"
+}
+},
+"home": {
+"team": {
+"name": "Milwaukee Brewers",
+"teamName": "Brewers",
+"clubName": "Brewers",
+"shortName": "Milwaukee",
+"abbreviation": "MIL"
+}
+}
+}
+}
+]
+}
+]
+}

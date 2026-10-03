@@ -1,0 +1,472 @@
+{
+"events": [
+{
+"id": "401891776",
+"date": "2026-10-03T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Buffalo",
+"name": "Sabres",
+"abbreviation": "BUF",
+"displayName": "Buffalo Sabres",
+"shortDisplayName": "Sabres"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Chicago",
+"name": "Blackhawks",
+"abbreviation": "CHI",
+"displayName": "Chicago Blackhawks",
+"shortDisplayName": "Blackhawks"
+}
+}
+]
+}
+]
+},
+{
+"id": "401891822",
+"date": "2026-10-03T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Pittsburgh",
+"name": "Penguins",
+"abbreviation": "PIT",
+"displayName": "Pittsburgh Penguins",
+"shortDisplayName": "Penguins"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Montreal",
+"name": "Canadiens",
+"abbreviation": "MTL",
+"displayName": "Montreal Canadiens",
+"shortDisplayName": "Canadiens"
+}
+}
+]
+}
+]
+},
+{
+"id": "401891826",
+"date": "2026-10-03T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Tampa Bay",
+"name": "Lightning",
+"abbreviation": "TB",
+"displayName": "Tampa Bay Lightning",
+"shortDisplayName": "Lightning"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Washington",
+"name": "Capitals",
+"abbreviation": "WSH",
+"displayName": "Washington Capitals",
+"shortDisplayName": "Capitals"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892434",
+"date": "2026-10-03T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Toronto",
+"name": "Maple Leafs",
+"abbreviation": "TOR",
+"displayName": "Toronto Maple Leafs",
+"shortDisplayName": "Maple Leafs"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Ottawa",
+"name": "Senators",
+"abbreviation": "OTT",
+"displayName": "Ottawa Senators",
+"shortDisplayName": "Senators"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892435",
+"date": "2026-10-03T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Philadelphia",
+"name": "Flyers",
+"abbreviation": "PHI",
+"displayName": "Philadelphia Flyers",
+"shortDisplayName": "Flyers"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Carolina",
+"name": "Hurricanes",
+"abbreviation": "CAR",
+"displayName": "Carolina Hurricanes",
+"shortDisplayName": "Hurricanes"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892436",
+"date": "2026-10-03T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Columbus",
+"name": "Blue Jackets",
+"abbreviation": "CBJ",
+"displayName": "Columbus Blue Jackets",
+"shortDisplayName": "Blue Jackets"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Utah",
+"name": "Mammoth",
+"abbreviation": "UTA",
+"displayName": "Utah Mammoth",
+"shortDisplayName": "Mammoth"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892437",
+"date": "2026-10-03T23:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Edmonton",
+"name": "Oilers",
+"abbreviation": "EDM",
+"displayName": "Edmonton Oilers",
+"shortDisplayName": "Oilers"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Seattle",
+"name": "Kraken",
+"abbreviation": "SEA",
+"displayName": "Seattle Kraken",
+"shortDisplayName": "Kraken"
+}
+}
+]
+}
+]
+},
+{
+"id": "401891818",
+"date": "2026-10-03T23:30Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "New York",
+"name": "Islanders",
+"abbreviation": "NYI",
+"displayName": "New York Islanders",
+"shortDisplayName": "Islanders"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "New Jersey",
+"name": "Devils",
+"abbreviation": "NJ",
+"displayName": "New Jersey Devils",
+"shortDisplayName": "Devils"
+}
+}
+]
+}
+]
+},
+{
+"id": "401891814",
+"date": "2026-10-04T00:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Minnesota",
+"name": "Wild",
+"abbreviation": "MIN",
+"displayName": "Minnesota Wild",
+"shortDisplayName": "Wild"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Boston",
+"name": "Bruins",
+"abbreviation": "BOS",
+"displayName": "Boston Bruins",
+"shortDisplayName": "Bruins"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892438",
+"date": "2026-10-04T00:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Nashville",
+"name": "Predators",
+"abbreviation": "NSH",
+"displayName": "Nashville Predators",
+"shortDisplayName": "Predators"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Dallas",
+"name": "Stars",
+"abbreviation": "DAL",
+"displayName": "Dallas Stars",
+"shortDisplayName": "Stars"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892439",
+"date": "2026-10-04T01:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Colorado",
+"name": "Avalanche",
+"abbreviation": "COL",
+"displayName": "Colorado Avalanche",
+"shortDisplayName": "Avalanche"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "St. Louis",
+"name": "Blues",
+"abbreviation": "STL",
+"displayName": "St. Louis Blues",
+"shortDisplayName": "Blues"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892440",
+"date": "2026-10-04T02:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "Vancouver",
+"name": "Canucks",
+"abbreviation": "VAN",
+"displayName": "Vancouver Canucks",
+"shortDisplayName": "Canucks"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Calgary",
+"name": "Flames",
+"abbreviation": "CGY",
+"displayName": "Calgary Flames",
+"shortDisplayName": "Flames"
+}
+}
+]
+}
+]
+},
+{
+"id": "401892441",
+"date": "2026-10-04T02:00Z",
+"competitions": [
+{
+"status": {
+"type": {
+"name": "STATUS_SCHEDULED",
+"state": "pre"
+}
+},
+"competitors": [
+{
+"homeAway": "home",
+"team": {
+"location": "San Jose",
+"name": "Sharks",
+"abbreviation": "SJ",
+"displayName": "San Jose Sharks",
+"shortDisplayName": "Sharks"
+}
+},
+{
+"homeAway": "away",
+"team": {
+"location": "Los Angeles",
+"name": "Kings",
+"abbreviation": "LA",
+"displayName": "Los Angeles Kings",
+"shortDisplayName": "Kings"
+}
+}
+]
+}
+]
+}
+]
+}

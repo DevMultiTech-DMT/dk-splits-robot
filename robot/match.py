@@ -37,6 +37,9 @@ CFB_ALIASES = {
     "mississippi": "ole miss",
     "florida international": "fiu",
     "sam houston state": "sam houston",
+    # The Odds API (FanDuel) spellings, 10/3 slate: 54 of 54 matched, these two on time only
+    "umass minutemen": "massachusetts minutemen",
+    "mcneese state cowboys": "mcneese cowboys",
 }
 ONE_SIDE_MAX = timedelta(minutes=20)
 BOTH_SIDES_MAX = timedelta(hours=4)
@@ -73,15 +76,22 @@ class Match:
 
 
 def match_game(sport: str, dk: DkGame, games: list[OfficialGame], now_utc: datetime) -> Match | None:
-    dk_time = when_to_utc(dk.when_et, now_utc)
+    return match_teams(sport, dk.away, dk.home, when_to_utc(dk.when_et, now_utc), games)
+
+
+def match_teams(
+    sport: str, away: str, home: str, when_utc: datetime | None, games: list[OfficialGame]
+) -> Match | None:
+    """Any source's 'AWAY @ HOME' + start time -> the official game (DK, FanDuel, ...)."""
+    dk_time = when_utc
     both: list[tuple[timedelta, Match]] = []
     one: list[tuple[timedelta, Match]] = []
     for g in games:
         if g.sport != sport:
             continue
         dt = abs(dk_time - g.start_utc) if dk_time else timedelta(0)
-        straight = (team_matches(sport, dk.home, g.home), team_matches(sport, dk.away, g.away))
-        flipped = (team_matches(sport, dk.home, g.away), team_matches(sport, dk.away, g.home))
+        straight = (team_matches(sport, home, g.home), team_matches(sport, away, g.away))
+        flipped = (team_matches(sport, home, g.away), team_matches(sport, away, g.home))
         if all(straight):
             both.append((dt, Match(g, False, "both")))
         elif all(flipped):

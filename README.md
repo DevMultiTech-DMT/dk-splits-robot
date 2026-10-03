@@ -1,8 +1,8 @@
 # dk-splits-robot
 
 Grabs the public DraftKings betting splits (% of the **money** and % of the
-**bets** on each side) for MLB, NFL, WNBA, NBA and college football, so the
-PropEdge app doesn't need them typed in by hand.
+**bets** on each side) and **FanDuel's moneylines** for MLB, NFL, WNBA, NBA,
+college football and NHL, so the PropEdge app doesn't need them typed in by hand.
 
 **Status: BUILT, SWITCHED OFF.** Nothing runs until it is turned on.
 
@@ -21,13 +21,32 @@ PropEdge app doesn't need them typed in by hand.
   one record per game (latest + morning numbers). Every record from an earlier
   day is deleted on the next run. No history is kept anywhere.
 
+## FanDuel moneylines (The Odds API) and the credit budget
+
+Off until the `ODDS_API_KEY` secret is added, even when the robot is on.
+
+- **Cost:** 1 credit per sport per pull. One pull refreshes every game in that
+  sport. A sport with no games left today costs nothing.
+- **Free plan (500 credits a month):** each day gets about 16 credits, which
+  covers the **morning line** for every sport plus a **10-minute line** before
+  kickoffs until the day's credits run out. The morning line is always taken
+  first.
+- **20K plan ($30 a month):** the budget grows automatically. The robot reads the
+  credits left, so it also takes the 15-minute line and refreshes every 30
+  minutes. Nothing needs changing.
+- The robot never goes below 10 credits.
+- Each pull matches FanDuel's team names to the app's own game IDs, the same way
+  as the splits.
+
 ## Switches
 
 | Switch | Where | Now |
 |---|---|---|
 | Robot on/off | Actions tab → **DK splits robot** → `...` → Enable / Disable workflow | **Off** |
 | Firebase key | Settings → Secrets and variables → Actions → `FIREBASE_SERVICE_ACCOUNT` | Added (database-only key) |
-| Show / auto-fill in the app | PropEdge `lib/dkSplits.ts` flags | **Off** |
+| FanDuel moneylines | same place → secret `ODDS_API_KEY` | **Off** (not added) |
+| Splits in the app | PropEdge `lib/dkSplits.ts` → `DK_SPLITS_AUTOFILL` | **Off** |
+| FanDuel odds in the app | PropEdge `lib/fdOdds.ts` → `FD_ODDS_AUTOFILL` | **Off** |
 
 All of these work from any browser or the GitHub phone app, anywhere in the world.
 
@@ -38,6 +57,7 @@ enabled), then pick a mode:
 - **look-only**: prints today's numbers and saves nothing
 - **check-firebase**: proves the key works (writes, reads back and deletes one
   throwaway record; touches no game data)
+- **check-odds**: proves the Odds API key works and shows the credits left (free)
 - **live**: one real run
 
 ## If something goes wrong
@@ -54,6 +74,8 @@ enabled), then pick a mode:
 - `robot/dk.py`: reads the DraftKings page
 - `robot/official.py`: official schedules (the app's game ids)
 - `robot/match.py`: DraftKings game → official game (name-fix list: `CFB_ALIASES`)
+- `robot/fanduel.py`: FanDuel moneylines from The Odds API, plus the credit budget
 - `robot/store.py`: Firebase (current day only)
-- `robot/main.py`: one run (clean, sweep, pre-game grabs)
-- `tests/`: built on real pages saved 9/26/2026. Run with `python -m unittest discover -s tests -t .`
+- `robot/main.py`: one run (clean, sweep, pre-game grabs, FanDuel pulls)
+- `tests/`: built on real pages and responses saved 9/26 and 10/3/2026. Run with
+  `python -m unittest discover -s tests -t .`

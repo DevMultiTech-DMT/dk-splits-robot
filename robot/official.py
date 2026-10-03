@@ -1,7 +1,7 @@
 """Official schedules -- the SAME game ids the PropEdge app keys its cards on.
 
-MLB  -> statsapi.mlb.com gamePk           (app: services/MLBStatsService.ts)
-NFL / WNBA / NBA / CFB -> ESPN event id   (app: services/*EspnService.ts)
+MLB  -> statsapi.mlb.com gamePk                 (app: services/MLBStatsService.ts)
+NFL / WNBA / NBA / CFB / NHL -> ESPN event id   (app: services/*EspnService.ts)
 
 The app's card key is `${sport}-${gameId}`; the robot uses the same key as the
 Firestore document id, so a number can only ever land on the game it was
@@ -23,8 +23,9 @@ ESPN_PATHS = {
     "WNBA": "/apis/site/v2/sports/basketball/wnba/scoreboard?dates={d}",
     "NBA": "/apis/site/v2/sports/basketball/nba/scoreboard?dates={d}",
     "CFB": "/apis/site/v2/sports/football/college-football/scoreboard?dates={d}&groups=80&limit=300",
+    "NHL": "/apis/site/v2/sports/hockey/nhl/scoreboard?dates={d}",  # 10/3: the app's NHL tab
 }
-SPORTS = ("MLB", "NFL", "WNBA", "NBA", "CFB")
+SPORTS = ("MLB", "NFL", "WNBA", "NBA", "CFB", "NHL")
 
 
 @dataclass
