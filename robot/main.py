@@ -134,7 +134,7 @@ class FanDuelPuller:
     Budget state (today's credits used, last pull per sport, today's cap) lives in the
     `_robot_state` doc, which carries `day` and so is cleared at midnight like the rest."""
 
-    def __init__(self, key, fs, games, day_s, log, fetch=None, credits_fn=None):
+    def __init__(self, key, fs, games, day_s, log, now, fetch=None, credits_fn=None):
         self.key, self.fs, self.games, self.day_s, self.log = key, fs, games, day_s, log
         self.fetch = fetch or fanduel.fetch
         self.lines: list[dict] = []
@@ -150,8 +150,14 @@ class FanDuelPuller:
             self.on = False
             return
         st = fs.get_state() if fs else {}
+        credits = self.credits or 0
         if st.get("day") != day_s:
-            st = {"day": day_s, "oddsUsed": 0, "lastPull": {}, "oddsCap": fanduel.day_cap(self.credits or 0)}
+            st = {"day": day_s, "oddsUsed": 0, "lastPull": {}}
+            st.update(oddsCap=fanduel.day_cap(credits, now), creditsAtCap=credits)
+        elif credits > st.get("creditsAtCap", credits):
+            # the monthly reset landed mid-day (1st, 12 AM UTC = 8 PM ET): start the new budget now
+            st.update(oddsUsed=0, oddsCap=fanduel.day_cap(credits, now), creditsAtCap=credits)
+            log(f"  FanDuel: credits reset detected ({credits}) - new month's budget starts now")
         self.state = st
         log(f"  FanDuel: ON | {self.credits} credits left | today's cap {st['oddsCap']}, used {st['oddsUsed']}")
 
@@ -259,7 +265,7 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
     odds_key = os.environ.get("ODDS_API_KEY", "").strip() if (with_odds or not dry_run) else ""
     if not odds_key and not dry_run:
         log("  FanDuel: OFF (no ODDS_API_KEY)")
-    fd = FanDuelPuller(odds_key, fs, games, day_s, log)
+    fd = FanDuelPuller(odds_key, fs, games, day_s, log, now)
     for s in active:
         kind = fd.kind_for_sweep(s, now)
         if kind:
@@ -351,7 +357,9 @@ def main(argv: list[str] | None = None) -> int:
         except Exception as e:
             print(f"Odds API check: FAILED ({e})")
             return 1
-        print(f"Odds API check: OK | {left} credits left | a day's budget at this level: {fanduel.day_cap(left or 0)}")
+        now = utcnow()
+        print(f"Odds API check: OK | {left} credits left | {fanduel.days_left(now)} day(s) to the reset on "
+              f"{fanduel.next_reset(now):%b %d} 12 AM UTC | today's budget: {fanduel.day_cap(left or 0, now)}")
         return 0
     if a.check_firebase:
         fs = store.firestore_from_env()

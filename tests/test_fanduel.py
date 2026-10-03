@@ -47,8 +47,23 @@ class FanDuel(unittest.TestCase):
         for g in games:
             self.assertIsNotNone(match_game("NHL", g, NHL_1003, NOW_1003), g.home)
 
+    def test_credits_reset_on_the_1st_at_midnight_utc(self):
+        # the user's account page 10/3: "Monthly plans reset on the 1st of each month at 12AM UTC"
+        self.assertEqual(fanduel.next_reset(NOW_1003), datetime(2026, 11, 1, tzinfo=timezone.utc))
+        self.assertEqual(fanduel.next_reset(datetime(2026, 12, 15, tzinfo=timezone.utc)),
+                         datetime(2027, 1, 1, tzinfo=timezone.utc))
+        self.assertEqual(fanduel.days_left(NOW_1003), 29)  # 10/3 1:05 AM ET -> 11/1
+        # Oct 31, 2 PM ET: 6 hours to the reset -> the whole remainder is today's
+        last_day = datetime(2026, 10, 31, 18, 0, tzinfo=timezone.utc)
+        self.assertEqual(fanduel.days_left(last_day), 1)
+        self.assertEqual(fanduel.day_cap(100, last_day), 90)
+
     def test_budget(self):
-        self.assertEqual((fanduel.day_cap(500), fanduel.day_cap(20000), fanduel.day_cap(5)), (16, 666, 0))
+        self.assertEqual(
+            (fanduel.day_cap(500, NOW_1003), fanduel.day_cap(497, NOW_1003), fanduel.day_cap(20000, NOW_1003),
+             fanduel.day_cap(5, NOW_1003)),
+            (16, 16, 689, 0),
+        )
         a = fanduel.allowed
         # free plan (cap 16): the morning line + the 10-minute line only
         self.assertTrue(a("morning", 99, 16, 400))  # the morning line ignores the day cap
@@ -86,7 +101,7 @@ class FanDuelPulls(unittest.TestCase):
             left["n"] -= 1 if got else 0  # a pull with no games costs nothing
             return got, left["n"]
 
-        return main.FanDuelPuller("k", fs, {"MLB": MLB_1003}, "2026-10-03", lambda *_: None,
+        return main.FanDuelPuller("k", fs, {"MLB": MLB_1003}, "2026-10-03", lambda *_: None, NOW_1003,
                                   fetch=fetch, credits_fn=lambda key: credits)
 
     def lad_key(self):
@@ -123,6 +138,16 @@ class FanDuelPulls(unittest.TestCase):
         p.pull("MLB", "morning", NOW_1003)
         self.assertEqual(len(calls), 1)
 
+    def test_the_8pm_reset_starts_the_new_budget_mid_day(self):
+        fs, calls = FakeFirestore(), []
+        # Oct 31: the day's budget is spent, then 12 AM UTC (8 PM ET) refills the plan
+        fs.docs[store.STATE_DOC] = {"day": "2026-10-03", "oddsUsed": 40, "oddsCap": 40,
+                                    "creditsAtCap": 50, "lastPull": {}}
+        p = self.puller(fs, credits=500, calls=calls)
+        self.assertEqual((p.state["oddsUsed"], p.state["creditsAtCap"]), (0, 500))
+        p.pull("MLB", "T-10", NOW_1003)
+        self.assertEqual(len(calls), 1)
+
     def test_prices_follow_the_team_when_listed_the_other_way_round(self):
         fs = FakeFirestore()
         lad = next(e for e in fanduel.parse_events(load("fd_mlb_1003.json")) if e.home == "Los Angeles Dodgers")
@@ -138,7 +163,7 @@ class FanDuelPulls(unittest.TestCase):
         self.assertEqual([k for k in fs.docs if k != store.STATE_DOC], [])
 
     def test_no_key_means_no_pulls(self):
-        p = main.FanDuelPuller("", FakeFirestore(), {"MLB": MLB_1003}, "2026-10-03", lambda *_: None,
+        p = main.FanDuelPuller("", FakeFirestore(), {"MLB": MLB_1003}, "2026-10-03", lambda *_: None, NOW_1003,
                                fetch=lambda *a: self.fail("pulled without a key"))
         p.pull("MLB", "morning", NOW_1003)
         self.assertFalse(p.on)

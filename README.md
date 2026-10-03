@@ -27,14 +27,19 @@ Off until the `ODDS_API_KEY` secret is added, even when the robot is on.
 
 - **Cost:** 1 credit per sport per pull. One pull refreshes every game in that
   sport. A sport with no games left today costs nothing.
-- **Free plan (500 credits a month):** each day gets about 16 credits, which
-  covers the **morning line** for every sport plus a **10-minute line** before
-  kickoffs until the day's credits run out. The morning line is always taken
-  first.
+- **Credits reset on the 1st of each month at 12 AM UTC** (8 PM Eastern on the
+  month's last evening), per the account page. Each day's budget is the credits
+  left, spread over the days until that reset. On the last day everything left
+  can be spent, because unused credits don't carry over. If the reset lands
+  mid-day, the new month's budget starts right then.
+- **Free plan (500 credits a month):** about 16 credits a day, which covers the
+  **morning line** for every sport plus a **10-minute line** before kickoffs until
+  the day's credits run out. The morning line is always taken first.
 - **20K plan ($30 a month):** the budget grows automatically. The robot reads the
   credits left, so it also takes the 15-minute line and refreshes every 30
   minutes. Nothing needs changing.
-- The robot never goes below 10 credits.
+- The robot never goes below 10 credits. `check-odds` shows the credits left,
+  the days to the reset and today's budget, and it's free.
 - Each pull matches FanDuel's team names to the app's own game IDs, the same way
   as the splits.
 

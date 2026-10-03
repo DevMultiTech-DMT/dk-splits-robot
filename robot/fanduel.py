@@ -8,15 +8,18 @@ Checked live 10/3 on the user's key:
 
 The free plan is 500 credits a month, so pulls are BUDGETED (`allowed`). The
 plan's size is read from the credits left; nothing is hard-coded to a plan.
+Credits reset on the 1st of each month at 12 AM UTC (the user's account page,
+10/3), so a day's share is the credits left spread over the days until then.
 """
 from __future__ import annotations
 
 import json
+import math
 import urllib.error
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 BASE = "https://api.the-odds-api.com/v4"
 SPORT_KEYS = {
@@ -30,19 +33,32 @@ SPORT_KEYS = {
 
 # --- budget -----------------------------------------------------------------
 FLOOR = 10  # never spend below this many credits (kept back for manual checks)
-SPREAD_DAYS = 30  # a day's cap = (credits left - FLOOR) / 30, fixed at the day's first pull
 MIN_GAP = timedelta(minutes=8)  # one pull per sport refreshes ALL its games; don't repeat inside 8 min
 REFRESH_EVERY = timedelta(minutes=25)
 
 
-def day_cap(credits: int) -> int:
-    return max(0, (credits - FLOOR) // SPREAD_DAYS)
+def next_reset(now: datetime) -> datetime:
+    """The 1st of next month, 12 AM UTC (8 PM Eastern on the month's last evening)."""
+    n = now.astimezone(timezone.utc)
+    return datetime(n.year + (n.month == 12), n.month % 12 + 1, 1, tzinfo=timezone.utc)
+
+
+def days_left(now: datetime) -> int:
+    """Days of budget left in the credit month, counting today (the last day = 1)."""
+    return max(1, math.ceil((next_reset(now) - now).total_seconds() / 86400))
+
+
+def day_cap(credits: int, now: datetime) -> int:
+    """Today's share: (credits left - FLOOR) spread over the days until the reset. On the
+    month's last day that is everything left -- unused credits don't carry over."""
+    return max(0, (credits - FLOOR) // days_left(now))
 
 
 def allowed(kind: str, used_today: int, cap: int, credits: int | None) -> bool:
     """Priority: the MORNING line always (while credits last); the 10-minute line next;
     the 15-minute line and the every-30-minute refresh only on a bigger plan.
-    Free plan (500): cap ~16/day -> morning + T-10. 20K plan: cap ~666/day -> everything."""
+    Free plan (500): cap ~16/day -> morning + T-10 (more as the reset nears with credits
+    to spare). 20K plan: cap ~650/day -> everything."""
     if credits is None or credits <= FLOOR:
         return False
     if kind == "morning":
