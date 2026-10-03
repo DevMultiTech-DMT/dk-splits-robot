@@ -1,43 +1,45 @@
 name: DK splits robot
 
 # ON/OFF SWITCH = this workflow's enabled state (Actions tab -> "DK splits robot"
-# -> "..." -> Disable / Enable workflow). It ships DISABLED: nothing runs.
+# -> "..." -> Disable / Enable workflow). Disabled = nothing runs.
 #
-# When enabled it runs every 30 minutes around the clock. The first run after
-# midnight Eastern takes the day's MORNING numbers; every run updates them; it
-# also waits for the 15- and 10-minute marks before each game. Current day only:
-# earlier days are deleted from Firebase. Saves ONLY to the Firebase `splits`
-# collection (needs the FIREBASE_SERVICE_ACCOUNT secret). FanDuel moneylines are
-# added only once the ODDS_API_KEY secret exists, and they're credit-budgeted.
+# What it does (user 10/3): TWO kinds of grabs, nothing else --
+#   1. the MORNING grab just after midnight Eastern (every game of the new day), and
+#   2. ten minutes before each game (that game's numbers again).
+# Between grabs one run sleeps and wakes itself on time (GitHub's own timer is
+# best-effort: on 10/3 it skipped every slot for an hour). GitHub ends a job at 6
+# hours, so the robot starts a fresh run before that and the fresh run carries on
+# with the same plan (Firestore splits/_robot_plan). The hourly timer below is ONLY a
+# backup that restarts the robot if it ever stops; a restart never repeats a grab.
+# Saves ONLY to the Firebase `splits` collection. FanDuel lines need ODDS_API_KEY and
+# follow the app's Auto-fill switch.
 #
-# "Run workflow" by hand: look-only (default, saves nothing), check-firebase
-# (proves the key works, touches no game data), or live (a real run).
+# "Run workflow" by hand: look-only (default, saves nothing), check-firebase /
+# check-odds (prove a key works, free), or live (starts the robot).
 on:
   schedule:
-    - cron: "7,37 * * * *" # UTC; :07 and :37 dodge GitHub's busy top of the hour
+    - cron: "7 * * * *" # UTC; backup restart only -- an extra start waits in line or is replaced
   workflow_dispatch:
     inputs:
       mode:
-        description: "look-only = print, save nothing | check-firebase / check-odds = test a key (free) | live = real run"
+        description: "look-only = print, save nothing | check-firebase / check-odds = test a key (free) | live = start the robot"
         type: choice
         options: [look-only, check-firebase, check-odds, live]
         default: look-only
 
 concurrency:
   group: dk-splits-robot
-  cancel-in-progress: false
+  cancel-in-progress: false # one robot at a time; at most one start waits in line
 
 permissions:
   contents: write # only for the keep-alive below; the robot saves nothing in this repo
-  actions: write # the self-chain below starts the next run
+  actions: write # the robot starts its own next run before GitHub's 6-hour limit
 
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 80 # the robot (<= ~45 min with pre-game waits) + the wait for the next slot
+    timeout-minutes: 350 # the robot hands off at ~325 minutes
     steps:
-      - name: Note when this run started (the self-chain aims at the next slot after it)
-        run: echo "RUN_START=$(date -u +%s)" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -57,16 +59,18 @@ jobs:
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
         run: python -m robot.main --check-odds
-      - name: Grab and save
+      - name: Run the robot (morning grab + 10 minutes before each game)
         if: github.event_name == 'schedule' || inputs.mode == 'live'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          # FanDuel moneylines run ONLY when this secret exists (its own on/off switch)
+          # FanDuel lines run ONLY when this secret exists (its own on/off switch)
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           # optional last day (YYYY-MM-DD, Eastern); after it the robot pulls nothing
           ROBOT_UNTIL: ${{ vars.ROBOT_UNTIL }}
           # optional one-day FanDuel budget raise, "YYYY-MM-DD=N"
           ODDS_CAP_TODAY: ${{ vars.ODDS_CAP_TODAY }}
+          # lets the robot start its own next run (hand-off before the 6-hour limit)
+          GH_TOKEN: ${{ github.token }}
         run: python -m robot.main
       # GitHub pauses timers in public repos after 60 days without a commit. Once
       # every ~25 days this rewrites one date in .keepalive -- no numbers, no history.
@@ -80,26 +84,3 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add .keepalive && git commit -q -m "keepalive" && git push -q
           fi
-      # SELF-CHAIN (10/3): GitHub's timer is best-effort -- on 10/3 it skipped every :07/:37
-      # slot for the first hour after the robot was switched on. So every real run waits for
-      # the next :07 or :37 and starts the next run itself. Only one run can wait in line
-      # (concurrency group), so a working timer + this chain never pile up; disabling the
-      # workflow stops the chain (the next start is refused).
-      - name: Start the next run at the next :07 or :37
-        if: always() && (github.event_name == 'schedule' || inputs.mode == 'live')
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # the first :07 or :37 at least a minute after THIS run started; if the run's
-          # pre-game waits already carried it past that slot, start the next run right away
-          start=${RUN_START:-$(date -u +%s)}
-          hour=$(( start - start % 3600 ))
-          for t in 7 37 67; do
-            slot=$(( hour + t * 60 ))
-            if [ "$slot" -gt $(( start + 60 )) ]; then break; fi
-          done
-          wait=$(( slot - $(date -u +%s) ))
-          [ "$wait" -lt 0 ] && wait=0
-          echo "next run in ${wait}s (slot $(date -u -d @$slot +%H:%M) UTC)"
-          sleep "$wait"
-          gh workflow run robot.yml --repo "${{ github.repository }}" --ref main -f mode=live

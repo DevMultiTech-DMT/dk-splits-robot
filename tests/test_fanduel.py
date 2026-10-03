@@ -65,14 +65,11 @@ class FanDuel(unittest.TestCase):
             (16, 16, 689, 0),
         )
         a = fanduel.allowed
-        # free plan (cap 16): the morning line + the 10-minute line only
+        # the two grabs only: the morning line + the 10-minute line
         self.assertTrue(a("morning", 99, 16, 400))  # the morning line ignores the day cap
         self.assertTrue(a("T-10", 5, 16, 400))
         self.assertFalse(a("T-10", 16, 16, 400))  # cap reached
-        self.assertFalse(a("T-15", 0, 16, 400))
-        self.assertFalse(a("refresh", 0, 16, 400))
-        # 20K plan: everything
-        self.assertTrue(a("T-15", 0, 666, 19000) and a("refresh", 0, 666, 19000))
+        self.assertFalse(a("refresh", 0, 666, 19000))  # nothing else, on any plan
         # nearly out: nothing, not even the morning line
         self.assertFalse(a("morning", 0, 0, fanduel.FLOOR))
         self.assertFalse(a("morning", 0, 16, None))
@@ -110,29 +107,27 @@ class FanDuelPulls(unittest.TestCase):
     def test_morning_then_pre_game_keeps_the_morning_line(self):
         fs = FakeFirestore()
         p = self.puller(fs)
-        self.assertEqual(p.kind_for_sweep("MLB", NOW_1003), "morning")
         p.pull("MLB", "morning", NOW_1003)
         d = fs.docs[self.lad_key()]
         self.assertEqual((d["fdMlAway"], d["fdMlHome"]), (188, -225))
-        self.assertEqual(p.kind_for_sweep("MLB", NOW_1003), "refresh")
         moved = [fanduel.FdGame(e.event_id, e.away, e.home, e.start_utc, 170, -205, "")
                  for e in fanduel.parse_events(load("fd_mlb_1003.json"))]
-        self.puller(fs, credits=479, events=moved).pull("MLB", "T-10", NOW_1003 + timedelta(hours=10))
+        self.puller(fs, credits=479, events=moved).pull("MLB", "T-10", NOW_1003 + timedelta(hours=10),
+                                                        only_keys={self.lad_key()})
         d = fs.docs[self.lad_key()]
         self.assertEqual((d["fdMlAway"], d["fdMlHome"], d["fdMorningAway"], d["fdMorningHome"]), (170, -205, 188, -225))
         self.assertEqual(fs.docs[store.STATE_DOC]["oddsUsed"], 2)
 
-    def test_a_game_without_a_fanduel_price_never_repeats_the_morning_pull(self):
-        # 10/3: TXSO @ FAU had no FanDuel line; the morning pull must not repeat every sweep
-        fs, calls = FakeFirestore(), []
-        some = fanduel.parse_events(load("fd_mlb_1003.json"))[:2]  # 2 of the 4 MLB games priced
-        p = self.puller(fs, events=some, calls=calls)
-        p.pull("MLB", p.kind_for_sweep("MLB", NOW_1003), NOW_1003)
-        later = NOW_1003 + timedelta(minutes=35)
-        p2 = self.puller(fs, events=some, calls=calls)  # the next 30-minute run
-        self.assertEqual(p2.kind_for_sweep("MLB", later), "refresh")
-        p2.pull("MLB", p2.kind_for_sweep("MLB", later), later)  # refresh needs a big plan -> skipped
-        self.assertEqual(len(calls), 1)
+    def test_the_10_minute_grab_touches_only_the_games_about_to_start(self):
+        fs = FakeFirestore()
+        self.puller(fs).pull("MLB", "morning", NOW_1003)
+        moved = [fanduel.FdGame(e.event_id, e.away, e.home, e.start_utc, 170, -205, "")
+                 for e in fanduel.parse_events(load("fd_mlb_1003.json"))]
+        self.puller(fs, events=moved).pull("MLB", "T-10", NOW_1003 + timedelta(hours=10), only_keys={self.lad_key()})
+        others = [g.key for g in MLB_1003 if g.key != self.lad_key() and g.key in fs.docs]
+        self.assertTrue(others)
+        for k in others:  # every other game keeps its morning line until its own 10-minute grab
+            self.assertEqual(fs.docs[k]["fdMlAway"], fs.docs[k]["fdMorningAway"])
 
     def test_run_and_puck_lines_ride_the_same_pull(self):
         # The Odds API shape with h2h + spreads (Yankees @ Rays 10/3: NYY +1.5 -210 / TB -1.5 +172)
@@ -149,23 +144,11 @@ class FanDuelPulls(unittest.TestCase):
         self.assertEqual((fs.docs[tb]["fdSpAway"], fs.docs[tb]["fdSpHome"]),
                          ({"point": 1.5, "price": -210}, {"point": -1.5, "price": 172}))
 
-    def test_a_day_whose_morning_pull_had_no_run_lines_gets_one_spreads_pull(self):
-        fs = FakeFirestore()
-        fs.docs[store.STATE_DOC] = {"day": "2026-10-03", "oddsUsed": 4, "oddsCap": 36, "creditsAtCap": 488,
-                                    "lastPull": {"MLB": "2026-10-03T05:34:53Z", "CFB": "2026-10-03T05:34:53Z"}}
-        p = self.puller(fs)
-        later = NOW_1003 + timedelta(hours=1)
-        self.assertEqual(p.kind_for_sweep("MLB", later), "spreads")  # MLB carries run lines -> once
-        p.pull("MLB", "spreads", later)
-        self.assertEqual(p.kind_for_sweep("MLB", later), "refresh")
-        self.assertTrue(fanduel.allowed("spreads", 4, 36, 480))
-        self.assertFalse(fanduel.allowed("spreads", 36, 36, 480))  # under the day's cap
-
-    def test_one_pull_per_sport_inside_8_minutes(self):
+    def test_never_the_same_sport_twice_inside_5_minutes(self):
         fs, calls = FakeFirestore(), []
         p = self.puller(fs, calls=calls)
         p.pull("MLB", "morning", NOW_1003)
-        p.pull("MLB", "T-10", NOW_1003 + timedelta(minutes=5))  # same sport, too soon
+        p.pull("MLB", "T-10", NOW_1003 + timedelta(minutes=3))  # same sport, too soon
         self.assertEqual(len(calls), 1)
 
     def test_day_cap_stops_the_10_minute_line_but_never_the_morning(self):

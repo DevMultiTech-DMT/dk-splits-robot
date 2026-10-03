@@ -1,14 +1,15 @@
-"""One robot run (every 30 minutes, around the clock).
+"""The robot: TWO kinds of grabs, nothing else (user 10/3).
 
-0. CLEAN: delete every `splits` doc from an earlier day (current day only).
-1. SWEEP: every league with a game still to start today -> grab + save.
-2. PRE-GAME: for each game starting within the next 40 minutes, wait for the
-   15- and 10-minute marks and grab that league again (saving only those games).
-   The waiting happens inside the run because GitHub's own timer can fire
-   10-15 minutes late.
+  1. MORNING, right after midnight Eastern: clear yesterday's docs, then grab every game
+     of the new day (DraftKings splits + FanDuel lines, incl. MLB/NHL run/puck lines).
+  2. TEN MINUTES BEFORE each game: grab that game's numbers again (same sources).
 
-The day is the Eastern calendar day: it starts at midnight, and the first grab
-after midnight is the day's MORNING number (user's call 9/26).
+Between grabs the run sleeps. GitHub's own timer proved best-effort (on 10/3 it skipped
+every slot for an hour), so the robot wakes ITSELF at midnight and at each 10-minute
+mark; GitHub ends a job at 6 hours, so before that the run starts a fresh one that
+carries on with the same plan (kept in Firestore `splits/_robot_plan`). GitHub's hourly
+timer is only a backup that restarts the robot if it ever stops -- a restart grabs
+nothing that's already been grabbed.
 
   python -m robot.main --dry-run --no-wait   # look only: print, save nothing
   python -m robot.main --check-firebase      # prove the key works; touches no game data
@@ -16,17 +17,21 @@ after midnight is the day's MORNING number (user's call 9/26).
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import time
-from collections import defaultdict
+import urllib.request
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
 from . import dk, fanduel, official, store
 from .match import match_game, match_teams, team_split, total_split
 
-HORIZON = timedelta(minutes=40)
-LEADS = (15, 10)
+LEAD = timedelta(minutes=10)  # the one pre-game grab ("only ... ten minutes before")
+CLUSTER = timedelta(minutes=6)  # same-sport starts this close share one grab
+JOB_MINUTES = 325  # GitHub ends a job at 6 hours: hand off to a fresh run before that
+AFTER_MIDNIGHT = timedelta(minutes=2)  # the morning grab, just after the day turns
 
 
 def utcnow() -> datetime:
@@ -81,12 +86,12 @@ def build_row(sport: str, g: dk.DkGame, m, now: datetime, phase: str) -> dict:
 def unmatched_row(sport: str, g: dk.DkGame, now: datetime) -> dict:
     return {
         "grabbed_at_utc": store.iso(now), "sport": sport, "dk_event_id": g.event_id,
-        "phase": "sweep", "match": f"UNMATCHED ({g.when_et})", "away_dk": g.away, "home_dk": g.home,
+        "phase": "morning", "match": f"UNMATCHED ({g.when_et})", "away_dk": g.away, "home_dk": g.home,
     }
 
 
 def grab(sports, games, now, only: dict[str, str] | None, log, fetch_league=None, retry_wait: float = 5.0):
-    """-> rows. `only` = {game key: phase} for a pre-game grab; None = full sweep."""
+    """-> rows. `only` = {game key: phase} for a pre-game grab; None = every game (morning)."""
     fetch_league = fetch_league or dk.fetch_league
     rows = []
     today_et = now.astimezone(dk.ET).date()
@@ -126,7 +131,7 @@ def grab(sports, games, now, only: dict[str, str] | None, log, fetch_league=None
             if not eligible(m.game, now):
                 n_skip += 1
                 continue
-            rows.append(build_row(sport, g, m, now, only[m.game.key] if only else "sweep"))
+            rows.append(build_row(sport, g, m, now, only[m.game.key] if only else "morning"))
             n_match += 1
         log(f"  {sport}: DK listed {len(listed)}, saved {n_match}, skipped {n_skip} already started")
     return rows
@@ -173,35 +178,20 @@ class FanDuelPuller:
         self.state = st
         log(f"  FanDuel: ON | {self.credits} credits left | today's cap {st['oddsCap']}, used {st['oddsUsed']}")
 
-    def kind_for_sweep(self, sport: str, now: datetime) -> str | None:
-        """'morning' = the day's FIRST FanDuel pull for the sport; every sweep after it is a
-        'refresh'. (10/3 fix: it used to stay 'morning' while any game lacked a morning line,
-        and TXSO @ FAU / McNeese @ LSU had no FanDuel price at all -- so every 30-minute sweep
-        re-pulled CFB as 'morning', 1 credit each, outside the day's cap. A game priced later
-        still gets its own first price as its morning line, via build_fd_doc.)"""
-        if not any(eligible(g, now) for g in self.games.get(sport, [])):
-            return None
-        if not self.state.get("lastPull", {}).get(sport):
-            return "morning"
-        # MLB/NHL run/puck lines: the first pull that CARRIED them today (10/3: added after that
-        # day's morning pulls) -- once per sport per day, under the day's cap like the T-10 line
-        if sport in fanduel.SPREAD_SPORTS and not self.state.get("spreadPull", {}).get(sport):
-            return "spreads"
-        return "refresh"
-
-    def pull(self, sport: str, kind: str, now: datetime) -> None:
+    def pull(self, sport: str, kind: str, now: datetime, only_keys: set[str] | None = None) -> None:
+        """kind 'morning' (every game of the sport) or 'T-10' (only `only_keys`, the games
+        about to start -- the other games keep their own lines until their own T-10)."""
         if not self.on:
             return
         st = self.state
         last = st.setdefault("lastPull", {}).get(sport)
-        gap = now - _parse_iso(last) if last else None
-        if gap is not None and (gap < fanduel.MIN_GAP or (kind == "refresh" and gap < fanduel.REFRESH_EVERY)):
+        if last and now - _parse_iso(last) < fanduel.MIN_GAP:
             return
         if not fanduel.allowed(kind, st.get("oddsUsed", 0), st.get("oddsCap", 0), self.credits):
             self.log(f"  FanDuel {sport}: {kind} pull skipped (budget: used {st.get('oddsUsed', 0)} of "
                      f"{st.get('oddsCap', 0)} today, {self.credits} left)")
             return
-        elig = [g for g in self.games.get(sport, []) if eligible(g, now)]
+        elig = [g for g in self.games.get(sport, []) if eligible(g, now) and (only_keys is None or g.key in only_keys)]
         if not elig:
             return
         to = max(g.start_utc for g in elig) + timedelta(minutes=30)
@@ -215,8 +205,6 @@ class FanDuelPuller:
             self.credits = rem
         st["oddsUsed"] = st.get("oddsUsed", 0) + max(cost, 0)
         st["lastPull"][sport] = store.iso(now)
-        if sport in fanduel.SPREAD_SPORTS:
-            st.setdefault("spreadPull", {})[sport] = store.iso(now)
         matched = []
         for e in events:
             m = match_teams(sport, e.away, e.home, e.start_utc, elig)
@@ -245,95 +233,186 @@ class FanDuelPuller:
                  f"cost {cost}, {self.credits} credits left")
 
 
-def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.sleep, clock=utcnow,
-        with_odds: bool = False) -> int:
-    now = clock()
-    day = slate_day(now)
-    log(f"Robot run {store.iso(now)} | slate {day} | {'DRY RUN (saves nothing)' if dry_run else 'LIVE'}")
-    # automatic stop (user 10/3: "just for today"): after the ROBOT_UNTIL day, pull nothing
-    until = os.environ.get("ROBOT_UNTIL", "").strip()
-    if until and not dry_run and day.isoformat() > until:
-        log(f"  STOPPED: today ({day}) is past ROBOT_UNTIL ({until}) - nothing pulled, no credits spent")
-        return 0
+@dataclass
+class Target:
+    """One 10-minute grab: a sport + the games about to start (same-sport starts within
+    CLUSTER minutes share it, taken no later than 3 minutes before the earliest of them)."""
+
+    when: datetime
+    sport: str
+    keys: set
+    tid: str
+
+
+def plan_targets(games: dict, now: datetime, done: set) -> list[Target]:
+    out = []
+    for sport, gs in games.items():
+        items = sorted(
+            (((g.start_utc - LEAD).replace(second=0, microsecond=0), g) for g in gs if eligible(g, now)),
+            key=lambda x: x[0],
+        )
+        i = 0
+        while i < len(items):
+            t0 = items[i][0]
+            cluster = [items[i]]
+            i += 1
+            while i < len(items) and items[i][0] <= t0 + CLUSTER:
+                cluster.append(items[i])
+                i += 1
+            when = min(max(t for t, _ in cluster), min(g.start_utc for _, g in cluster) - timedelta(minutes=3))
+            tid = f"{sport}|{store.iso(when)}"
+            if tid not in done:
+                out.append(Target(when, sport, {g.key for _, g in cluster}, tid))
+    return sorted(out, key=lambda t: t.when)
+
+
+def next_midnight(now: datetime) -> datetime:
+    """Just after the next midnight Eastern: the next day's morning grab."""
+    et = now.astimezone(dk.ET)
+    nxt = datetime.combine(et.date() + timedelta(days=1), datetime.min.time(), tzinfo=dk.ET)
+    return nxt.astimezone(timezone.utc) + AFTER_MIDNIGHT
+
+
+def dispatch_next(log) -> bool:
+    """Start the next run (GitHub ends a job at 6 hours) with this run's own GITHUB_TOKEN."""
+    token, repo = os.environ.get("GH_TOKEN", ""), os.environ.get("GITHUB_REPOSITORY", "")
+    if not token or not repo:
+        log("  hand-off: not running on GitHub - no next run started")
+        return False
+    req = urllib.request.Request(
+        f"https://api.github.com/repos/{repo}/actions/workflows/robot.yml/dispatches",
+        data=json.dumps({"ref": "main", "inputs": {"mode": "live"}}).encode(),
+        method="POST",
+        headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as r:
+            ok = r.status == 204
+    except Exception as e:  # e.g. the workflow was switched off: the robot simply stops
+        log(f"  hand-off refused ({e}) - robot stops; GitHub's hourly timer restarts it if it's on")
+        return False
+    log("  hand-off: next run started; it carries on with the same plan")
+    return ok
+
+
+def load_games(sports: list[str], day, log) -> dict:
     games: dict[str, list[official.OfficialGame]] = {}
     for s in sports:
         try:
             games[s] = official.games_for(s, day)
         except Exception as e:  # one league's schedule being down never stops the others
             log(f"  {s}: official schedule unavailable ({e}) - skipped")
-    active = [s for s in sports if any(eligible(g, now) for g in games.get(s, []))]
-    log(f"  leagues with games still to start: {', '.join(active) or 'none'}")
+    return games
 
-    day_s = day.isoformat()
-    fs = None if dry_run else store.firestore_from_env()
-    if not dry_run:
-        log(f"  Firebase: {'ON -> collection splits' if fs else 'OFF (no key) - nothing will be saved'}")
-    if fs:
-        gone = fs.delete_before(day_s)
-        if gone:
-            log(f"  cleared {gone} doc(s) from before {day_s} (current day only)")
-    all_rows: list[dict] = []
 
-    def save(rows: list[dict], label: str) -> None:
-        all_rows.extend(rows)
-        if not fs or not rows:
-            return
-        keyed = [r for r in rows if r.get("key")]
-        existing = fs.existing(sorted({r["key"] for r in keyed}))
-        docs = [d for d in (store.build_doc(r, existing.get(r["key"]), day_s) for r in keyed) if d]
-        n = fs.write(docs)
-        log(f"  saved {n} game(s) to Firebase ({label})")
+def save_rows(fs, rows: list[dict], day_s: str, log, label: str) -> None:
+    if not fs or not rows:
+        return
+    keyed = [r for r in rows if r.get("key")]
+    existing = fs.existing(sorted({r["key"] for r in keyed}))
+    docs = [d for d in (store.build_doc(r, existing.get(r["key"]), day_s) for r in keyed) if d]
+    n = fs.write(docs)
+    log(f"  saved {n} game(s) to Firebase ({label})")
 
-    save(grab(active, games, now, None, log), "sweep")
 
-    # FanDuel moneylines: only with the ODDS_API_KEY secret; a look-only run spends
-    # credits only when asked (--with-odds)
-    odds_key = os.environ.get("ODDS_API_KEY", "").strip() if (with_odds or not dry_run) else ""
-    if not odds_key and not dry_run:
+def fanduel_for(fs, games, day_s, log, now, dry_run: bool, with_odds: bool) -> FanDuelPuller:
+    """FanDuel only with the ODDS_API_KEY secret, and never while the app's Auto-fill
+    switch is off (credits saved for the days it's on; DK splits keep coming, free)."""
+    key = os.environ.get("ODDS_API_KEY", "").strip() if (with_odds or not dry_run) else ""
+    if not key and not dry_run:
         log("  FanDuel: OFF (no ODDS_API_KEY)")
-    # the app's Auto-fill switch (10/3): off = no FanDuel pulls, credits saved for the days
-    # it's on. DK splits (free) keep coming so they're there the moment it's switched on.
-    if odds_key and fs:
+    if key and fs:
         try:
             switch = fs.app_auto_fill()
         except Exception:
             switch = None
         if switch is False:
             log("  FanDuel: PAUSED - Auto-fill is switched off in the app (no credits spent)")
-            odds_key = ""
-    fd = FanDuelPuller(odds_key, fs, games, day_s, log, now)
-    for s in active:
-        kind = fd.kind_for_sweep(s, now)
-        if kind:
-            fd.pull(s, kind, now)
+            key = ""
+    return FanDuelPuller(key, fs, games, day_s, log, now)
 
-    if wait:
-        targets: dict[datetime, dict[str, str]] = defaultdict(dict)
-        sport_of: dict[str, str] = {}
-        for s in active:
-            for g in games[s]:
-                if not eligible(g, now):
-                    continue
-                for lead in LEADS:
-                    t = (g.start_utc - timedelta(minutes=lead)).replace(second=0, microsecond=0)
-                    if now < t <= now + HORIZON:
-                        targets[t][g.key] = f"T-{lead}"
-                        sport_of[g.key] = s
-        for t in sorted(targets):
-            pause = (t - clock()).total_seconds()
+
+def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.sleep, clock=utcnow,
+        with_odds: bool = False, stop_at: datetime | None = None, dispatch=None,
+        job_minutes: int = JOB_MINUTES) -> int:
+    started = clock()
+    deadline = started + timedelta(minutes=job_minutes)
+    dispatch = dispatch or dispatch_next
+    fs = None if dry_run else store.firestore_from_env()
+    log(f"Robot run {store.iso(started)} | {'DRY RUN (saves nothing)' if dry_run else 'LIVE'} | "
+        f"Firebase {'ON -> collection splits' if fs else 'OFF (nothing will be saved)'}")
+    mem_plan: dict = {}
+    while True:
+        now = clock()
+        day = slate_day(now)
+        day_s = day.isoformat()
+        until = os.environ.get("ROBOT_UNTIL", "").strip()
+        if until and not dry_run and day_s > until:
+            log(f"  STOPPED: today ({day_s}) is past ROBOT_UNTIL ({until}) - nothing pulled, no credits spent")
+            return 0
+        games = load_games(sports, day, log)
+        plan = fs.get_plan() if fs else dict(mem_plan)
+        if plan.get("day") != day_s:
+            plan = {"day": day_s, "morningDone": False, "done": []}
+            # a day whose morning grab the earlier robot version already took (10/3 05:34 UTC)
+            if fs:
+                st = fs.get_state()
+                plan["morningDone"] = st.get("day") == day_s and bool(st.get("lastPull"))
+        fd = fanduel_for(fs, games, day_s, log, now, dry_run, with_odds)
+        rows: list[dict] = []
+
+        if not plan["morningDone"]:
+            if fs:
+                gone = fs.delete_before(day_s)
+                if gone:
+                    log(f"  cleared {gone} doc(s) from before {day_s} (current day only)")
+            active = [s for s in sports if any(eligible(g, now) for g in games.get(s, []))]
+            log(f"  MORNING grab for {day_s}: {', '.join(active) or 'no games'}")
+            got = grab(active, games, now, None, log)
+            save_rows(fs, got, day_s, log, "morning")
+            rows += got
+            for s in active:
+                fd.pull(s, "morning", now)
+            plan["morningDone"] = True
+
+        # the 10-minute grabs due now (a late one still counts while its games haven't started)
+        for t in plan_targets(games, now, set(plan["done"])):
+            if t.when > now + timedelta(seconds=30):
+                break
+            log(f"  10-MINUTE grab: {t.sport}, {len(t.keys)} game(s)")
+            got = grab([t.sport], games, now, {k: "T-10" for k in t.keys}, log)
+            save_rows(fs, got, day_s, log, "10 minutes before")
+            rows += got
+            fd.pull(t.sport, "T-10", now, only_keys=t.keys)
+            plan["done"].append(t.tid)
+
+        if fs:
+            fs.set_plan(plan)
+        else:
+            mem_plan.clear()
+            mem_plan.update(plan)
+        summarize(rows, log)
+        summarize_fanduel(fd.lines, log)
+        if not wait:
+            return 0
+
+        upcoming = plan_targets(games, clock(), set(plan["done"]))
+        nxt = upcoming[0] if upcoming else None
+        when = nxt.when if nxt else next_midnight(clock())
+        if stop_at is not None and when > stop_at:
+            return 0
+        if when > deadline:
+            pause = (deadline - clock()).total_seconds()
             if pause > 0:
-                log(f"  waiting until {t.astimezone(dk.ET):%I:%M %p ET} for {len(targets[t])} pre-game grab(s)")
+                log(f"  sleeping until {deadline.astimezone(dk.ET):%I:%M %p ET}, then handing off to a fresh run")
                 sleep(pause)
-            keys = targets[t]
-            lg = sorted({sport_of[k] for k in keys})
-            save(grab(lg, games, clock(), keys, log), "pre-game")
-            for s in lg:
-                phases = {p for k, p in keys.items() if sport_of[k] == s}
-                fd.pull(s, "T-10" if "T-10" in phases else "T-15", clock())
-
-    summarize(all_rows, log)
-    summarize_fanduel(fd.lines, log)
-    return 0
+            dispatch(log)
+            return 0
+        pause = (when - clock()).total_seconds()
+        if pause > 0:
+            what = f"10 minutes before {nxt.sport} ({len(nxt.keys)} game(s))" if nxt else "midnight: the next morning grab"
+            log(f"  sleeping until {when.astimezone(dk.ET):%I:%M %p ET} - {what}")
+            sleep(pause)
 
 
 def summarize(rows: list[dict], log) -> None:

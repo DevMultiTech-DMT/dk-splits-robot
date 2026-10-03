@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 COLLECTION = "splits"  # the ONLY collection the robot may write
 CHECK_DOC = "_robot_check"  # self-test doc; never a game key, so the app never reads it
 STATE_DOC = "_robot_state"  # today's FanDuel credit use; carries `day`, so it resets at midnight
+PLAN_DOC = "_robot_plan"  # today's grabs done (morning + each 10-minute grab); carries `day` too
 
 
 def iso(dt: datetime) -> str:
@@ -216,6 +217,13 @@ class Firestore:
 
     def set_state(self, state: dict) -> None:
         self._col().document(STATE_DOC).set(state, merge=True)
+
+    def get_plan(self) -> dict:
+        snap = self._col().document(PLAN_DOC).get()
+        return (snap.to_dict() or {}) if snap.exists else {}
+
+    def set_plan(self, plan: dict) -> None:
+        self._col().document(PLAN_DOC).set(plan)
 
     def self_test(self) -> str:
         """Write, read back, and delete one throwaway doc. Proves the key + permissions."""

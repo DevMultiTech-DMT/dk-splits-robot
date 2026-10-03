@@ -137,7 +137,7 @@ class Matching(unittest.TestCase):
         swapped = dk.DkGame(g.event_id, g.home, g.away, g.when_et, g.markets)  # DK says DET @ PIT
         m = match_game("MLB", swapped, MLB, NOW)
         self.assertTrue(m.flipped)
-        row = main.build_row("MLB", swapped, m, NOW, "sweep")
+        row = main.build_row("MLB", swapped, m, NOW, "morning")
         self.assertEqual((row["home_dk"], row["ml_home_money"], row["ml_home_bets"]), ("DET Tigers", 51, 52))
 
     def test_one_team_is_enough_only_with_the_same_start_time(self):
@@ -194,8 +194,14 @@ class FakeFirestore:
     def set_state(self, st):
         self.docs[store.STATE_DOC] = {**self.docs.get(store.STATE_DOC, {}), **st}
 
+    def get_plan(self):
+        return dict(self.docs.get(store.PLAN_DOC, {}))
 
-def row(when, bets, money, key="MLB-824219", phase="sweep"):
+    def set_plan(self, plan):
+        self.docs[store.PLAN_DOC] = dict(plan, done=list(plan.get("done", [])))
+
+
+def row(when, bets, money, key="MLB-824219", phase="morning"):
     g = dk_games("dk_mlb_p1.html")[0]
     r = main.build_row("MLB", g, match_game("MLB", g, MLB, NOW), when, phase)
     r.update(key=key, ml_home_bets=bets, ml_home_money=money)
@@ -232,26 +238,29 @@ class Saving(unittest.TestCase):
 
 
 class Runs(unittest.TestCase):
-    def run_robot(self, start, fs, dry_run=False):
-        """One run at `start` with the saved PIT @ DET page; returns (rows, sleeps, log)."""
+    def run_robot(self, start, fs, dry_run=False, stop_at=None, job_minutes=main.JOB_MINUTES, games=None):
+        """The robot from `start` until its next wake would pass `stop_at` (default: 45 min
+        later), on the saved PIT @ DET page; returns (rows, sleeps, log, hand-offs)."""
         g = dk_games("dk_mlb_p1.html")[0]  # PIT @ DET, first pitch 17:10 UTC
         clock = {"t": start}
-        slept, rows, logs = [], [], []
+        slept, rows, logs, handoffs = [], [], [], []
 
         def sleep(sec):
             slept.append(sec)
             clock["t"] += timedelta(seconds=sec)
 
         saved = official.games_for, dk.fetch_league, store.firestore_from_env, main.summarize
-        official.games_for = lambda s, d: MLB if s == "MLB" else []
+        official.games_for = lambda s, d: (games if games is not None else MLB) if s == "MLB" else []
         dk.fetch_league = lambda s, ed="today": [g]
         store.firestore_from_env = lambda: fs
         main.summarize = lambda r, log: rows.extend(r)
         try:
-            main.run(dry_run=dry_run, wait=True, sports=["MLB"], log=logs.append, sleep=sleep, clock=lambda: clock["t"])
+            main.run(dry_run=dry_run, wait=True, sports=["MLB"], log=logs.append, sleep=sleep,
+                     clock=lambda: clock["t"], stop_at=stop_at or start + timedelta(minutes=45),
+                     dispatch=lambda log: handoffs.append(clock["t"]) or True, job_minutes=job_minutes)
         finally:
             official.games_for, dk.fetch_league, store.firestore_from_env, main.summarize = saved
-        return rows, slept, logs
+        return rows, slept, logs, handoffs
 
     def test_started_games_are_never_recorded(self):
         g = dk_games("dk_mlb_p1.html")[0]
@@ -273,12 +282,13 @@ class Runs(unittest.TestCase):
         self.assertEqual(len(calls), 2)
         self.assertEqual([r["key"] for r in rows], ["MLB-824219"])
 
-    def test_pre_game_grabs_at_15_and_10_minutes(self):
-        rows, slept, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), None, dry_run=True)
-        det = [r for r in rows if r["key"] == "MLB-824219"]
-        self.assertEqual([r["phase"] for r in det], ["sweep", "T-15", "T-10"])
-        self.assertEqual([r["min_to_start"] for r in det], [25, 15, 10])
-        self.assertEqual(slept, [600.0, 300.0])
+    def test_morning_then_only_10_minutes_before(self):
+        # user 10/3: the morning grab, then ONLY ten minutes before each game -- nothing else
+        rows, slept, _, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), None, dry_run=True)
+        det = [r for r in rows if r["key"] == "MLB-824219"]  # PIT @ DET, 17:10 UTC
+        self.assertEqual([r["phase"] for r in det], ["morning", "T-10"])
+        self.assertEqual([r["min_to_start"] for r in det], [25, 10])
+        self.assertEqual(slept, [900.0])  # one sleep: straight to 10 minutes before
 
     def test_live_run_saves_today_keeps_morning_and_clears_yesterday(self):
         fs = FakeFirestore({
@@ -291,7 +301,48 @@ class Runs(unittest.TestCase):
         det = fs.docs["MLB-824219"]
         self.assertEqual((det["pubBetsHome"], det["pubMoneyHome"], det["phase"]), (52, 51, "T-10"))
         self.assertEqual((det["morningBetsHome"], det["morningMoneyHome"]), (30, 35))  # the midnight number stands
-        self.assertEqual([w["phase"] for w in fs.writes if w["key"] == "MLB-824219"], ["sweep", "T-15", "T-10"])
+        self.assertEqual([w["phase"] for w in fs.writes if w["key"] == "MLB-824219"], ["morning", "T-10"])
+
+    def test_a_restart_never_repeats_a_grab(self):
+        fs = FakeFirestore()
+        self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), fs)
+        n = len(fs.writes)
+        # GitHub's backup timer (or a hand-off) starts a new run at 17:02 -- after both grabs
+        rows, _, logs, _ = self.run_robot(datetime(2026, 9, 26, 17, 2, tzinfo=timezone.utc), fs)
+        self.assertEqual((rows, len(fs.writes)), ([], n))
+        self.assertFalse(any("MORNING" in x for x in logs))
+
+    def test_a_morning_the_earlier_robot_took_is_not_taken_again(self):
+        # 10/3: the 05:34 UTC morning grab came from the previous robot version (no plan doc)
+        fs = FakeFirestore({store.STATE_DOC: {"day": "2026-09-26", "lastPull": {"MLB": "2026-09-26T05:34:00Z"}}})
+        rows, _, logs, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), fs)
+        self.assertEqual([r["phase"] for r in rows], ["T-10"])
+        self.assertFalse(any("MORNING" in x for x in logs))
+
+    def test_hands_off_to_a_fresh_run_before_githubs_6_hour_limit(self):
+        # a 10-minute job budget: the 17:00 grab is past it -> sleep to the limit, start the next run
+        rows, slept, _, handoffs = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), FakeFirestore(),
+                                                  job_minutes=10)
+        self.assertEqual([r["phase"] for r in rows], ["morning"])
+        self.assertEqual(slept, [600.0])
+        self.assertEqual(handoffs, [datetime(2026, 9, 26, 16, 55, tzinfo=timezone.utc)])
+
+    def test_after_the_last_game_it_sleeps_to_midnight_for_the_next_morning(self):
+        only_det = [x for x in MLB if x.key == "MLB-824219"]
+        _, slept, logs, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), None, dry_run=True,
+                                           stop_at=datetime(2026, 9, 27, 12, 0, tzinfo=timezone.utc), games=only_det,
+                                           job_minutes=24 * 60)  # no hand-off in the way of the midnight check
+        # 16:45 -> 17:00 (10 minutes before), then 17:00 -> 04:02 UTC (12:02 AM ET) for the next morning
+        self.assertEqual(slept, [900.0, 11 * 3600 + 2 * 60])
+        self.assertTrue(any("MORNING grab for 2026-09-27" in x for x in logs))
+
+    def test_same_sport_starts_within_6_minutes_share_one_grab(self):
+        base = next(x for x in MLB if x.key == "MLB-824219")  # 17:10 UTC
+        mk = lambda gid, mins: official.OfficialGame("MLB", gid, base.start_utc + timedelta(minutes=mins), base.away, base.home, "pre")
+        games = {"MLB": [base, mk("a", 5), mk("b", 12)]}  # 17:10, 17:15, 17:22
+        t = main.plan_targets(games, NOW, set())
+        self.assertEqual([(x.when.strftime("%H:%M"), sorted(x.keys)) for x in t],
+                         [("17:05", ["MLB-824219", "MLB-a"]), ("17:12", ["MLB-b"])])
 
     def test_app_switch_off_pauses_fanduel_but_keeps_the_free_splits(self):
         import os
@@ -302,7 +353,7 @@ class Runs(unittest.TestCase):
         os.environ["ODDS_API_KEY"] = "k"
         try:
             off = FakeFirestore(auto_fill=False)
-            _, _, logs = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), off)
+            _, _, logs, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), off)
             self.assertEqual(pulls, [])  # no FanDuel credits on an "off" day
             self.assertTrue(any("PAUSED" in x for x in logs))
             self.assertIn("MLB-824219", off.docs)  # the DK splits still saved
@@ -318,7 +369,7 @@ class Runs(unittest.TestCase):
         fs = FakeFirestore({"MLB-111": {"key": "MLB-111", "day": "2026-09-25"}})
         os.environ["ROBOT_UNTIL"] = "2026-09-25"
         try:
-            rows, _, logs = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), fs)
+            rows, _, logs, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), fs)
         finally:
             del os.environ["ROBOT_UNTIL"]
         self.assertEqual(rows, [])
@@ -327,13 +378,13 @@ class Runs(unittest.TestCase):
         # on the last day itself it still runs
         os.environ["ROBOT_UNTIL"] = "2026-09-26"
         try:
-            rows, _, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), FakeFirestore())
+            rows, _, _, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), FakeFirestore())
         finally:
             del os.environ["ROBOT_UNTIL"]
         self.assertTrue(rows)
 
     def test_no_key_saves_nothing(self):
-        _, _, logs = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), None)
+        _, _, logs, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), None)
         self.assertTrue(any("nothing will be saved" in x for x in logs))
 
     def test_the_day_starts_at_midnight_eastern(self):

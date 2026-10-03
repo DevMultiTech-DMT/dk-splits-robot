@@ -4,16 +4,21 @@ Grabs the public DraftKings betting splits (% of the **money** and % of the
 **bets** on each side) and **FanDuel's moneylines** for MLB, NFL, WNBA, NBA,
 college football and NHL, so the PropEdge app doesn't need them typed in by hand.
 
-**Status: BUILT, SWITCHED OFF.** Nothing runs until it is turned on.
+## What it does when it's on: two kinds of grabs, nothing else
 
-## What it does when it's on
+1. **The morning grab, just after midnight Eastern:** every game of the new day.
+   These are the day's **morning** numbers, the "was" in the app's "was → now".
+2. **Ten minutes before each game:** that game's numbers again. Games of the same
+   sport starting within 6 minutes of each other share one grab, taken no later
+   than 3 minutes before the first of them.
 
-- Runs **every 30 minutes, around the clock**, on GitHub's computers in the US.
-  Where you are doesn't matter, and your phone and computer can be off.
-- The **first run after midnight Eastern** takes the day's **morning** numbers.
-  Every later run updates the latest numbers.
-- For each game it also grabs **15 and 10 minutes before the start**. It waits for
-  those moments itself, because GitHub's timer can run late.
+- It runs on GitHub's computers in the US. Where you are doesn't matter, and your
+  phone and computer can be off.
+- Between grabs, one run **sleeps and wakes itself on time**. GitHub's own timer is
+  best-effort; on 10/3 it skipped every slot for an hour. GitHub ends a job at 6
+  hours, so the robot starts a fresh run before that, and the fresh run carries on
+  with the same plan (`splits/_robot_plan`). The hourly timer is only a backup that
+  restarts the robot if it ever stops, and a restart never repeats a grab.
 - Each game is matched to the **same game ID the app uses** (MLB's gamePk, ESPN's
   event id). If it can't tell which game is which, it leaves it blank and never
   guesses. Nothing is recorded once a game has started.
@@ -25,8 +30,8 @@ college football and NHL, so the PropEdge app doesn't need them typed in by hand
 
 Off until the `ODDS_API_KEY` secret is added, even when the robot is on.
 
-- **Cost:** 1 credit per sport per pull. One pull refreshes every game in that
-  sport. A sport with no games left today costs nothing.
+- **Cost:** 1 credit per sport per pull (2 for MLB and NHL, which also carry the
+  run line / puck line). A sport with no games left today costs nothing.
 - **Credits reset on the 1st of each month at 12 AM UTC** (8 PM Eastern on the
   month's last evening), per the account page. Each day's budget is the credits
   left, spread over the days until that reset. On the last day everything left
@@ -35,9 +40,8 @@ Off until the `ODDS_API_KEY` secret is added, even when the robot is on.
 - **Free plan (500 credits a month):** about 16 credits a day, which covers the
   **morning line** for every sport plus a **10-minute line** before kickoffs until
   the day's credits run out. The morning line is always taken first.
-- **20K plan ($30 a month):** the budget grows automatically. The robot reads the
-  credits left, so it also takes the 15-minute line and refreshes every 30
-  minutes. Nothing needs changing.
+- **20K plan ($30 a month):** the budget grows automatically, since the robot reads
+  the credits left, and every 10-minute line fits. Nothing needs changing.
 - The robot never goes below 10 credits. `check-odds` shows the credits left,
   the days to the reset and today's budget, and it's free.
 - Each pull matches FanDuel's team names to the app's own game IDs, the same way
@@ -47,13 +51,12 @@ Off until the `ODDS_API_KEY` secret is added, even when the robot is on.
 
 | Switch | Where | Now |
 |---|---|---|
-| Robot on/off | Actions tab → **DK splits robot** → `...` → Enable / Disable workflow | **Off** |
+| Robot on/off | Actions tab → **DK splits robot** → `...` → Enable / Disable workflow | **On** (since 10/3) |
 | Firebase key | Settings → Secrets and variables → Actions → `FIREBASE_SERVICE_ACCOUNT` | Added (database-only key) |
-| FanDuel moneylines | same place → secret `ODDS_API_KEY` | **Off** (not added) |
-| Splits in the app | PropEdge `lib/dkSplits.ts` → `DK_SPLITS_AUTOFILL` | **Off** |
-| FanDuel odds in the app | PropEdge `lib/fdOdds.ts` → `FD_ODDS_AUTOFILL` | **Off** |
+| FanDuel lines | same place → secret `ODDS_API_KEY` | Added |
+| Auto-fill (everyday on/off) | the **Auto-fill** switch in the app's Picks header (saved to `settings/app`; the robot skips FanDuel while it's off) | On |
 
-All of these work from any browser or the GitHub phone app, anywhere in the world.
+The robot switches work from any browser or the GitHub phone app, anywhere in the world.
 
 ## Checking it by hand
 

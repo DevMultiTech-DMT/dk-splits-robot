@@ -33,8 +33,7 @@ SPORT_KEYS = {
 
 # --- budget -----------------------------------------------------------------
 FLOOR = 10  # never spend below this many credits (kept back for manual checks)
-MIN_GAP = timedelta(minutes=8)  # one pull per sport refreshes ALL its games; don't repeat inside 8 min
-REFRESH_EVERY = timedelta(minutes=25)
+MIN_GAP = timedelta(minutes=5)  # never pull the same sport twice inside 5 minutes
 
 
 def next_reset(now: datetime) -> datetime:
@@ -55,23 +54,14 @@ def day_cap(credits: int, now: datetime) -> int:
 
 
 def allowed(kind: str, used_today: int, cap: int, credits: int | None) -> bool:
-    """Priority: the MORNING line always (while credits last); the 10-minute line next;
-    the 15-minute line and the every-30-minute refresh only on a bigger plan.
-    Free plan (500): cap ~16/day -> morning + T-10 (more as the reset nears with credits
-    to spare). 20K plan: cap ~650/day -> everything."""
+    """The two grabs (user 10/3: the morning, then only ten minutes before each game).
+    The MORNING line always (while credits last); each 10-minute line while today's cap
+    lasts. Free plan (500): cap ~16/day (more as the reset nears with credits to spare)."""
     if credits is None or credits <= FLOOR:
         return False
     if kind == "morning":
         return True
-    if used_today >= cap:
-        return False
-    if kind in ("T-10", "spreads"):
-        return True
-    if kind == "T-15":
-        return cap >= 40
-    if kind == "refresh":
-        return cap >= 100
-    return False
+    return kind == "T-10" and used_today < cap
 
 
 # --- API ----------------------------------------------------------------------
