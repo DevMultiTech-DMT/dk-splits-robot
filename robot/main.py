@@ -85,7 +85,7 @@ def unmatched_row(sport: str, g: dk.DkGame, now: datetime) -> dict:
     }
 
 
-def grab(sports, games, now, only: dict[str, str] | None, log, fetch_league=None):
+def grab(sports, games, now, only: dict[str, str] | None, log, fetch_league=None, retry_wait: float = 5.0):
     """-> rows. `only` = {game key: phase} for a pre-game grab; None = full sweep."""
     fetch_league = fetch_league or dk.fetch_league
     rows = []
@@ -97,11 +97,19 @@ def grab(sports, games, now, only: dict[str, str] | None, log, fetch_league=None
             edates.append("tomorrow")
         try:
             listed, seen = [], set()
-            for ed in edates:
-                for g in fetch_league(sport, ed):
-                    if g.event_id not in seen:
-                        seen.add(g.event_id)
-                        listed.append(g)
+            # 10/3 06:10 UTC: DK once answered MLB + CFB with an EMPTY list one minute after
+            # listing them all (NHL fine, same run) -- an empty answer while the official
+            # schedule still has games to start gets ONE retry before it's believed
+            for attempt in (1, 2):
+                for ed in edates:
+                    for g in fetch_league(sport, ed):
+                        if g.event_id not in seen:
+                            seen.add(g.event_id)
+                            listed.append(g)
+                if listed or attempt == 2 or not any(eligible(g, now) for g in games.get(sport, [])):
+                    break
+                log(f"  {sport}: DraftKings listed nothing although games are still to start - retrying once")
+                time.sleep(retry_wait)
         except dk.Blocked as e:
             log(f"  {sport}: DraftKings page FAILED ({e}) - nothing saved for {sport} this time")
             continue

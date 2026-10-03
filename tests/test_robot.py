@@ -260,6 +260,19 @@ class Runs(unittest.TestCase):
                          fetch_league=lambda s, ed: [g])
         self.assertEqual(rows, [])
 
+    def test_an_empty_dk_answer_gets_one_retry(self):
+        g = dk_games("dk_mlb_p1.html")[0]
+        answers = [[], [g]]  # 10/3 06:10 UTC: empty once, then the games
+        calls = []
+
+        def fetch(sport, ed):
+            calls.append(ed)
+            return answers.pop(0) if answers else [g]
+
+        rows = main.grab(["MLB"], {"MLB": MLB}, NOW, None, lambda *_: None, fetch_league=fetch, retry_wait=0)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual([r["key"] for r in rows], ["MLB-824219"])
+
     def test_pre_game_grabs_at_15_and_10_minutes(self):
         rows, slept, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), None, dry_run=True)
         det = [r for r in rows if r["key"] == "MLB-824219"]
