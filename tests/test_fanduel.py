@@ -148,6 +148,22 @@ class FanDuelPulls(unittest.TestCase):
         p.pull("MLB", "T-10", NOW_1003)
         self.assertEqual(len(calls), 1)
 
+    def test_a_one_day_budget_raise_applies_only_to_that_day(self):
+        import os
+        fs, calls = FakeFirestore(), []
+        fs.docs[store.STATE_DOC] = {"day": "2026-10-03", "oddsUsed": 16, "oddsCap": 16, "creditsAtCap": 480, "lastPull": {}}
+        os.environ["ODDS_CAP_TODAY"] = "2026-10-03=36"
+        try:
+            p = self.puller(fs, calls=calls)
+            self.assertEqual(p.state["oddsCap"], 36)
+            p.pull("MLB", "T-10", NOW_1003)  # 16 used < 36 -> the 10-minute line still goes
+            self.assertEqual(len(calls), 1)
+            os.environ["ODDS_CAP_TODAY"] = "2026-10-02=36"  # another day: no raise
+            fs.docs[store.STATE_DOC]["oddsCap"] = 16
+            self.assertEqual(self.puller(FakeFirestore({store.STATE_DOC: dict(fs.docs[store.STATE_DOC])})).state["oddsCap"], 16)
+        finally:
+            del os.environ["ODDS_CAP_TODAY"]
+
     def test_prices_follow_the_team_when_listed_the_other_way_round(self):
         fs = FakeFirestore()
         lad = next(e for e in fanduel.parse_events(load("fd_mlb_1003.json")) if e.home == "Los Angeles Dodgers")

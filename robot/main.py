@@ -158,6 +158,10 @@ class FanDuelPuller:
             # the monthly reset landed mid-day (1st, 12 AM UTC = 8 PM ET): start the new budget now
             st.update(oddsUsed=0, oddsCap=fanduel.day_cap(credits, now), creditsAtCap=credits)
             log(f"  FanDuel: credits reset detected ({credits}) - new month's budget starts now")
+        # one-day raise (user 10/3: every game's 10-minute line today): ODDS_CAP_TODAY="YYYY-MM-DD=N"
+        raise_day, _, raise_n = os.environ.get("ODDS_CAP_TODAY", "").strip().partition("=")
+        if raise_day.strip() == day_s and raise_n.strip().isdigit():
+            st["oddsCap"] = max(st.get("oddsCap", 0), int(raise_n))
         self.state = st
         log(f"  FanDuel: ON | {self.credits} credits left | today's cap {st['oddsCap']}, used {st['oddsUsed']}")
 

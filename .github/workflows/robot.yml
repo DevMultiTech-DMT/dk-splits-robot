@@ -62,6 +62,8 @@ jobs:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
           # optional last day (YYYY-MM-DD, Eastern); after it the robot pulls nothing
           ROBOT_UNTIL: ${{ vars.ROBOT_UNTIL }}
+          # optional one-day FanDuel budget raise, "YYYY-MM-DD=N"
+          ODDS_CAP_TODAY: ${{ vars.ODDS_CAP_TODAY }}
         run: python -m robot.main
       # GitHub pauses timers in public repos after 60 days without a commit. Once
       # every ~25 days this rewrites one date in .keepalive -- no numbers, no history.
