@@ -60,6 +60,8 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           # FanDuel moneylines run ONLY when this secret exists (its own on/off switch)
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          # optional last day (YYYY-MM-DD, Eastern); after it the robot pulls nothing
+          ROBOT_UNTIL: ${{ vars.ROBOT_UNTIL }}
         run: python -m robot.main
       # GitHub pauses timers in public repos after 60 days without a commit. Once
       # every ~25 days this rewrites one date in .keepalive -- no numbers, no history.

@@ -276,6 +276,25 @@ class Runs(unittest.TestCase):
         self.assertEqual((det["morningBetsHome"], det["morningMoneyHome"]), (30, 35))  # the midnight number stands
         self.assertEqual([w["phase"] for w in fs.writes if w["key"] == "MLB-824219"], ["sweep", "T-15", "T-10"])
 
+    def test_robot_until_stops_the_next_day(self):
+        import os
+        fs = FakeFirestore({"MLB-111": {"key": "MLB-111", "day": "2026-09-25"}})
+        os.environ["ROBOT_UNTIL"] = "2026-09-25"
+        try:
+            rows, _, logs = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), fs)
+        finally:
+            del os.environ["ROBOT_UNTIL"]
+        self.assertEqual(rows, [])
+        self.assertEqual(fs.writes, [])
+        self.assertTrue(any("STOPPED" in x for x in logs))
+        # on the last day itself it still runs
+        os.environ["ROBOT_UNTIL"] = "2026-09-26"
+        try:
+            rows, _, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), FakeFirestore())
+        finally:
+            del os.environ["ROBOT_UNTIL"]
+        self.assertTrue(rows)
+
     def test_no_key_saves_nothing(self):
         _, _, logs = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), None)
         self.assertTrue(any("nothing will be saved" in x for x in logs))

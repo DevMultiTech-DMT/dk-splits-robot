@@ -229,6 +229,11 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
     now = clock()
     day = slate_day(now)
     log(f"Robot run {store.iso(now)} | slate {day} | {'DRY RUN (saves nothing)' if dry_run else 'LIVE'}")
+    # automatic stop (user 10/3: "just for today"): after the ROBOT_UNTIL day, pull nothing
+    until = os.environ.get("ROBOT_UNTIL", "").strip()
+    if until and not dry_run and day.isoformat() > until:
+        log(f"  STOPPED: today ({day}) is past ROBOT_UNTIL ({until}) - nothing pulled, no credits spent")
+        return 0
     games: dict[str, list[official.OfficialGame]] = {}
     for s in sports:
         try:
