@@ -110,6 +110,10 @@ def _is_odds(v) -> bool:
     return isinstance(v, int) and not isinstance(v, bool) and abs(v) >= 100
 
 
+def _is_spread(v) -> bool:
+    return isinstance(v, dict) and isinstance(v.get("point"), (int, float)) and _is_odds(v.get("price"))
+
+
 def build_fd_doc(
     *, key: str, sport: str, game_id: str, start_utc: str, ml_away: int, ml_home: int,
     grabbed_at: str, book_at: str, existing: dict | None, day: str,
@@ -117,14 +121,28 @@ def build_fd_doc(
 ) -> dict:
     """FanDuel moneylines for one game, on the SAME doc as its DK splits (merged).
     The day's first FanDuel pull is the MORNING line, kept all day like the splits.
-    MLB/NHL also carry the main run/puck line (`fdSpAway` / `fdSpHome`: point + price)."""
+    MLB/NHL also carry the main run/puck line (`fdSpAway` / `fdSpHome`: point + price),
+    and its morning twin (`fdSpMorningAway` / `fdSpMorningHome`) so the app's run-line and
+    puck-line boxes show "was -> now" like the moneyline boxes (user 10/3: the spread boxes
+    were "not updating properly" next to moneylines that visibly moved)."""
+    same_day = existing is not None and existing.get("day") == day
     keep = (
-        existing is not None
-        and existing.get("day") == day
+        same_day
         and _is_odds(existing.get("fdMorningAway"))
         and _is_odds(existing.get("fdMorningHome"))
         and isinstance(existing.get("fdMorningAt"), str)
     )
+    # the day's first run/puck line: kept once set; a doc from before this field existed
+    # hands over the line it already holds (the earlier pull of the day)
+    sp_morning = None
+    if same_day:
+        a, h = existing.get("fdSpMorningAway"), existing.get("fdSpMorningHome")
+        if not (_is_spread(a) and _is_spread(h)):
+            a, h = existing.get("fdSpAway"), existing.get("fdSpHome")
+        if _is_spread(a) and _is_spread(h):
+            sp_morning = (a, h)
+    if sp_morning is None and sp_away and sp_home:
+        sp_morning = ({"point": sp_away[0], "price": sp_away[1]}, {"point": sp_home[0], "price": sp_home[1]})
     return {
         "day": day,
         "sport": sport,
@@ -146,6 +164,7 @@ def build_fd_doc(
             if sp_away and sp_home
             else {}
         ),
+        **({"fdSpMorningAway": sp_morning[0], "fdSpMorningHome": sp_morning[1]} if sp_morning else {}),
         "updatedAt": int(time.time() * 1000),
     }
 

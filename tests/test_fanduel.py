@@ -86,6 +86,31 @@ class FanDuel(unittest.TestCase):
         self.assertEqual(nextday["fdMorningAway"], 150)
 
 
+    def test_fd_doc_keeps_the_morning_run_and_puck_line(self):
+        # user 10/3: spread boxes "not updating properly" -- they had no "was" to show a move
+        kw = dict(key="NHL-1", sport="NHL", game_id="1", start_utc="2026-10-03T23:00:00Z", book_at="", day="2026-10-03")
+        # CHI @ BUF 10/3: BUF -1.5 went +104 (morning) -> +102 (10-minute grab)
+        first = store.build_fd_doc(ml_away=188, ml_home=-230, grabbed_at="2026-10-03T05:34:00Z", existing=None,
+                                   sp_away=(1.5, -130), sp_home=(-1.5, 104), **kw)
+        self.assertEqual((first["fdSpMorningAway"], first["fdSpMorningHome"]),
+                         ({"point": 1.5, "price": -130}, {"point": -1.5, "price": 104}))
+        later = store.build_fd_doc(ml_away=198, ml_home=-245, grabbed_at="2026-10-03T22:50:00Z", existing=first,
+                                   sp_away=(1.5, -128), sp_home=(-1.5, 102), **kw)
+        self.assertEqual(later["fdSpHome"], {"point": -1.5, "price": 102})
+        self.assertEqual(later["fdSpMorningHome"], {"point": -1.5, "price": 104})
+        # a doc written before the morning field existed: its earlier line becomes the morning
+        old = {k: v for k, v in first.items() if not k.startswith("fdSpMorning")}
+        self.assertEqual(store.build_fd_doc(ml_away=198, ml_home=-245, grabbed_at="2026-10-03T22:50:00Z", existing=old,
+                                            sp_away=(1.5, -128), sp_home=(-1.5, 102), **kw)["fdSpMorningHome"],
+                         {"point": -1.5, "price": 104})
+        # a new day starts over; a sport with no run line gets no field
+        nextday = store.build_fd_doc(ml_away=150, ml_home=-180, grabbed_at="2026-10-04T04:07:00Z", existing=later,
+                                     sp_away=(1.5, -140), sp_home=(-1.5, 118), **{**kw, "day": "2026-10-04"})
+        self.assertEqual(nextday["fdSpMorningHome"], {"point": -1.5, "price": 118})
+        cfb = store.build_fd_doc(ml_away=150, ml_home=-180, grabbed_at="2026-10-04T04:07:00Z", existing=None, **kw)
+        self.assertNotIn("fdSpMorningHome", cfb)
+
+
 class FanDuelPulls(unittest.TestCase):
     def puller(self, fs, credits=480, events=None, calls=None):
         events = events if events is not None else fanduel.parse_events(load("fd_mlb_1003.json"))
