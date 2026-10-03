@@ -29,12 +29,15 @@ concurrency:
 
 permissions:
   contents: write # only for the keep-alive below; the robot saves nothing in this repo
+  actions: write # the self-chain below starts the next run
 
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 80 # the robot (<= ~45 min with pre-game waits) + the wait for the next slot
     steps:
+      - name: Note when this run started (the self-chain aims at the next slot after it)
+        run: echo "RUN_START=$(date -u +%s)" >> "$GITHUB_ENV"
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
@@ -68,7 +71,7 @@ jobs:
       # GitHub pauses timers in public repos after 60 days without a commit. Once
       # every ~25 days this rewrites one date in .keepalive -- no numbers, no history.
       - name: Keep the timer alive
-        if: github.event_name == 'schedule'
+        if: always() && (github.event_name == 'schedule' || inputs.mode == 'live')
         run: |
           last=$(git log -1 --format=%ct)
           if [ $(( $(date +%s) - last )) -gt $(( 25 * 86400 )) ]; then
@@ -77,3 +80,26 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add .keepalive && git commit -q -m "keepalive" && git push -q
           fi
+      # SELF-CHAIN (10/3): GitHub's timer is best-effort -- on 10/3 it skipped every :07/:37
+      # slot for the first hour after the robot was switched on. So every real run waits for
+      # the next :07 or :37 and starts the next run itself. Only one run can wait in line
+      # (concurrency group), so a working timer + this chain never pile up; disabling the
+      # workflow stops the chain (the next start is refused).
+      - name: Start the next run at the next :07 or :37
+        if: always() && (github.event_name == 'schedule' || inputs.mode == 'live')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # the first :07 or :37 at least a minute after THIS run started; if the run's
+          # pre-game waits already carried it past that slot, start the next run right away
+          start=${RUN_START:-$(date -u +%s)}
+          hour=$(( start - start % 3600 ))
+          for t in 7 37 67; do
+            slot=$(( hour + t * 60 ))
+            if [ "$slot" -gt $(( start + 60 )) ]; then break; fi
+          done
+          wait=$(( slot - $(date -u +%s) ))
+          [ "$wait" -lt 0 ] && wait=0
+          echo "next run in ${wait}s (slot $(date -u -d @$slot +%H:%M) UTC)"
+          sleep "$wait"
+          gh workflow run robot.yml --repo "${{ github.repository }}" --ref main -f mode=live
