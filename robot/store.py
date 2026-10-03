@@ -193,6 +193,13 @@ class Firestore:
         batch.commit()
         return n
 
+    def app_auto_fill(self) -> bool | None:
+        """The app's Auto-fill switch (READ-ONLY `settings/app`): True / False, or None when
+        the app hasn't written it (no doc, or the `settings` rule isn't published yet)."""
+        snap = self.db.collection("settings").document("app").get()
+        v = (snap.to_dict() or {}).get("autoFill") if snap.exists else None
+        return v if isinstance(v, bool) else None
+
     def get_state(self) -> dict:
         snap = self._col().document(STATE_DOC).get()
         return (snap.to_dict() or {}) if snap.exists else {}

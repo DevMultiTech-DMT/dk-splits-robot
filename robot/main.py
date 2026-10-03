@@ -274,6 +274,16 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
     odds_key = os.environ.get("ODDS_API_KEY", "").strip() if (with_odds or not dry_run) else ""
     if not odds_key and not dry_run:
         log("  FanDuel: OFF (no ODDS_API_KEY)")
+    # the app's Auto-fill switch (10/3): off = no FanDuel pulls, credits saved for the days
+    # it's on. DK splits (free) keep coming so they're there the moment it's switched on.
+    if odds_key and fs:
+        try:
+            switch = fs.app_auto_fill()
+        except Exception:
+            switch = None
+        if switch is False:
+            log("  FanDuel: PAUSED - Auto-fill is switched off in the app (no credits spent)")
+            odds_key = ""
     fd = FanDuelPuller(odds_key, fs, games, day_s, log, now)
     for s in active:
         kind = fd.kind_for_sweep(s, now)

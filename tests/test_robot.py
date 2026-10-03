@@ -165,9 +165,13 @@ class Matching(unittest.TestCase):
 class FakeFirestore:
     """Stands in for store.Firestore: a dict of docs, same methods."""
 
-    def __init__(self, docs=None):
+    def __init__(self, docs=None, auto_fill=None):
         self.docs = dict(docs or {})
         self.writes = []
+        self.auto_fill = auto_fill
+
+    def app_auto_fill(self):
+        return self.auto_fill
 
     def existing(self, keys):
         return {k: dict(self.docs[k]) for k in keys if k in self.docs}
@@ -275,6 +279,26 @@ class Runs(unittest.TestCase):
         self.assertEqual((det["pubBetsHome"], det["pubMoneyHome"], det["phase"]), (52, 51, "T-10"))
         self.assertEqual((det["morningBetsHome"], det["morningMoneyHome"]), (30, 35))  # the midnight number stands
         self.assertEqual([w["phase"] for w in fs.writes if w["key"] == "MLB-824219"], ["sweep", "T-15", "T-10"])
+
+    def test_app_switch_off_pauses_fanduel_but_keeps_the_free_splits(self):
+        import os
+        pulls = []
+        orig_credits, orig_fetch = fanduel.credits_left, fanduel.fetch
+        fanduel.credits_left = lambda key: 400
+        fanduel.fetch = lambda *a, **k: (pulls.append(a[0]), ([], 400))[1]
+        os.environ["ODDS_API_KEY"] = "k"
+        try:
+            off = FakeFirestore(auto_fill=False)
+            _, _, logs = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), off)
+            self.assertEqual(pulls, [])  # no FanDuel credits on an "off" day
+            self.assertTrue(any("PAUSED" in x for x in logs))
+            self.assertIn("MLB-824219", off.docs)  # the DK splits still saved
+            for state in (True, None):  # on, or never set (no rule yet) -> pulls as before
+                self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), FakeFirestore(auto_fill=state))
+            self.assertTrue(pulls)
+        finally:
+            fanduel.credits_left, fanduel.fetch = orig_credits, orig_fetch
+            del os.environ["ODDS_API_KEY"]
 
     def test_robot_until_stops_the_next_day(self):
         import os
