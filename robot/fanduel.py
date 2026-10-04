@@ -34,6 +34,9 @@ SPORT_KEYS = {
 # --- budget -----------------------------------------------------------------
 FLOOR = 10  # never spend below this many credits (kept back for manual checks)
 MIN_GAP = timedelta(minutes=5)  # never pull the same sport twice inside 5 minutes
+# a pull-down refresh (user 10/3: "everything, every time") only skips a sport pulled for a
+# pull-down in the last minute -- two quick pull-downs never pay twice for the same lines
+REFRESH_GAP = timedelta(minutes=1)
 
 
 def next_reset(now: datetime) -> datetime:
@@ -56,10 +59,13 @@ def day_cap(credits: int, now: datetime) -> int:
 def allowed(kind: str, used_today: int, cap: int, credits: int | None) -> bool:
     """The two grabs (user 10/3: the morning, then only ten minutes before each game).
     The MORNING line always (while credits last); each 10-minute line while today's cap
-    lasts. Free plan (500): cap ~16/day (more as the reset nears with credits to spare)."""
+    lasts. Free plan (500): cap ~16/day (more as the reset nears with credits to spare).
+    A PULL-DOWN refresh from the app always (user 10/3 chose "everything, every time", told
+    credits can run out; FLOOR still holds). Its credits are counted apart (`refreshUsed`) so
+    they never use up the day's 10-minute grabs."""
     if credits is None or credits <= FLOOR:
         return False
-    if kind == "morning":
+    if kind in ("morning", "refresh"):
         return True
     return kind == "T-10" and used_today < cap
 

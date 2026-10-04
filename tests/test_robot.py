@@ -201,6 +201,27 @@ class FakeFirestore:
         self.docs[store.PLAN_DOC] = dict(plan, done=list(plan.get("done", [])))
 
 
+class RefreshFirestore(FakeFirestore):
+    """FakeFirestore that also carries the app's pull-down (settings/refresh + the answer)."""
+
+    def __init__(self, *a, requests=None, **kw):
+        super().__init__(*a, **kw)
+        self.requests = requests or []  # [(visible_from, requestedAt_ms)] -- the app's pull-downs
+        self.clock = None
+        self.done = {}
+
+    def get_refresh_request(self):
+        now = self.clock()
+        seen = [at for t, at in self.requests if t <= now]
+        return seen[-1] if seen else None
+
+    def get_refresh_done(self):
+        return dict(self.done)
+
+    def set_refresh_done(self, done):
+        self.done = dict(done)
+
+
 def row(when, bets, money, key="MLB-824219", phase="morning"):
     g = dk_games("dk_mlb_p1.html")[0]
     r = main.build_row("MLB", g, match_game("MLB", g, MLB, NOW), when, phase)
@@ -254,6 +275,8 @@ class Runs(unittest.TestCase):
         dk.fetch_league = lambda s, ed="today": [g]
         store.firestore_from_env = lambda: fs
         main.summarize = lambda r, log: rows.extend(r)
+        if isinstance(fs, RefreshFirestore):
+            fs.clock = lambda: clock["t"]
         try:
             main.run(dry_run=dry_run, wait=True, sports=["MLB"], log=logs.append, sleep=sleep,
                      clock=lambda: clock["t"], stop_at=stop_at or start + timedelta(minutes=45),
@@ -335,6 +358,41 @@ class Runs(unittest.TestCase):
         # 16:45 -> 17:00 (10 minutes before), then 17:00 -> 04:02 UTC (12:02 AM ET) for the next morning
         self.assertEqual(slept, [900.0, 11 * 3600 + 2 * 60])
         self.assertTrue(any("MORNING grab for 2026-09-27" in x for x in logs))
+
+    def test_a_pull_down_in_the_app_grabs_every_game_still_to_start_within_15_seconds(self):
+        # user 10/3: "when I pull down to refresh, everything gets pulled exactly when I do that"
+        start = datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc)  # PIT @ DET at 17:10 UTC
+        asked = start + timedelta(minutes=3, seconds=4)
+        fs = RefreshFirestore(requests=[(asked, int(asked.timestamp() * 1000))])
+        rows, slept, logs, _ = self.run_robot(start, fs)
+        det = [r for r in rows if r["key"] == "MLB-824219"]
+        self.assertEqual([r["phase"] for r in det], ["morning", "refresh", "T-10"])
+        refresh = det[1]
+        self.assertEqual(refresh["grabbed_at_utc"], "2026-09-26T16:48:15Z")  # the next 15-second look
+        self.assertEqual(fs.done["handled"], int(asked.timestamp() * 1000))
+        self.assertTrue(any("PULL-DOWN REFRESH" in x for x in logs))
+        self.assertTrue(all(s <= main.POLL for s in slept))  # it naps in short looks, never past one
+        # answered once: the same pull-down is never grabbed twice
+        self.assertEqual(sum("PULL-DOWN REFRESH" in x for x in logs), 1)
+
+    def test_an_old_or_answered_pull_down_is_ignored(self):
+        start = datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc)
+        old = start - timedelta(minutes=11)  # the app gave up on it long ago
+        fs = RefreshFirestore(requests=[(old, int(old.timestamp() * 1000))])
+        rows, _, logs, _ = self.run_robot(start, fs)
+        self.assertNotIn("refresh", [r["phase"] for r in rows])
+        recent = start - timedelta(minutes=1)
+        fs2 = RefreshFirestore(requests=[(recent, int(recent.timestamp() * 1000))])
+        fs2.done = {"handled": int(recent.timestamp() * 1000)}  # a run before this one answered it
+        rows2, _, _, _ = self.run_robot(start, fs2)
+        self.assertNotIn("refresh", [r["phase"] for r in rows2])
+
+    def test_a_pull_down_waiting_when_the_run_starts_is_grabbed_at_once(self):
+        start = datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc)
+        asked = start - timedelta(minutes=1)  # sent during the hand-off between two runs
+        fs = RefreshFirestore(requests=[(asked, int(asked.timestamp() * 1000))])
+        rows, _, _, _ = self.run_robot(start, fs)
+        self.assertEqual([r["phase"] for r in rows if r["key"] == "MLB-824219"][:2], ["morning", "refresh"])
 
     def test_same_sport_starts_within_6_minutes_share_one_grab(self):
         base = next(x for x in MLB if x.key == "MLB-824219")  # 17:10 UTC

@@ -32,6 +32,11 @@ LEAD = timedelta(minutes=10)  # the one pre-game grab ("only ... ten minutes bef
 CLUSTER = timedelta(minutes=6)  # same-sport starts this close share one grab
 JOB_MINUTES = 325  # GitHub ends a job at 6 hours: hand off to a fresh run before that
 AFTER_MIDNIGHT = timedelta(minutes=2)  # the morning grab, just after the day turns
+# the app's PULL-DOWN (user 10/3: "when I pull down to refresh, everything gets pulled exactly
+# when I do that"): a sleeping robot looks for it every POLL seconds and grabs every game still
+# to start (splits + FanDuel); a request older than REFRESH_STALE was given up on by the app
+POLL = 15
+REFRESH_STALE = timedelta(minutes=10)
 
 
 def utcnow() -> datetime:
@@ -179,13 +184,20 @@ class FanDuelPuller:
         log(f"  FanDuel: ON | {self.credits} credits left | today's cap {st['oddsCap']}, used {st['oddsUsed']}")
 
     def pull(self, sport: str, kind: str, now: datetime, only_keys: set[str] | None = None) -> None:
-        """kind 'morning' (every game of the sport) or 'T-10' (only `only_keys`, the games
-        about to start -- the other games keep their own lines until their own T-10)."""
+        """kind 'morning' (every game of the sport), 'T-10' (only `only_keys`, the games
+        about to start -- the other games keep their own lines until their own T-10), or
+        'refresh' (the app's pull-down: every game of the sport still to start)."""
         if not self.on:
             return
         st = self.state
+        refresh = kind == "refresh"
         last = st.setdefault("lastPull", {}).get(sport)
-        if last and now - _parse_iso(last) < fanduel.MIN_GAP:
+        last_refresh = st.setdefault("lastRefresh", {}).get(sport)
+        if refresh:
+            newest = max((_parse_iso(x) for x in (last, last_refresh) if x), default=None)
+            if newest and now - newest < fanduel.REFRESH_GAP:
+                return
+        elif last and now - _parse_iso(last) < fanduel.MIN_GAP:
             return
         if not fanduel.allowed(kind, st.get("oddsUsed", 0), st.get("oddsCap", 0), self.credits):
             self.log(f"  FanDuel {sport}: {kind} pull skipped (budget: used {st.get('oddsUsed', 0)} of "
@@ -203,8 +215,12 @@ class FanDuelPuller:
         cost = (self.credits - rem) if (rem is not None and self.credits is not None) else (1 if events else 0)
         if rem is not None:
             self.credits = rem
-        st["oddsUsed"] = st.get("oddsUsed", 0) + max(cost, 0)
-        st["lastPull"][sport] = store.iso(now)
+        if refresh:  # counted apart: a pull-down never uses up the day's 10-minute grabs
+            st["refreshUsed"] = st.get("refreshUsed", 0) + max(cost, 0)
+            st["lastRefresh"][sport] = store.iso(now)
+        else:
+            st["oddsUsed"] = st.get("oddsUsed", 0) + max(cost, 0)
+            st["lastPull"][sport] = store.iso(now)
         matched = []
         for e in events:
             m = match_teams(sport, e.away, e.home, e.start_utc, elig)
@@ -264,6 +280,40 @@ def plan_targets(games: dict, now: datetime, done: set) -> list[Target]:
             if tid not in done:
                 out.append(Target(when, sport, {g.key for _, g in cluster}, tid))
     return sorted(out, key=lambda t: t.when)
+
+
+def hears(fs) -> bool:
+    """A store that can carry the app's pull-down (the live Firestore; not a bare test fake)."""
+    return fs is not None and hasattr(fs, "get_refresh_request")
+
+
+def pending_refresh(fs, now: datetime, handled: int) -> int | None:
+    """The app's pull-down not answered yet (its requestedAt, ms), or None."""
+    if not hears(fs):
+        return None
+    try:
+        at = fs.get_refresh_request()
+    except Exception:  # a failed look never stops the schedule
+        return None
+    if at is None or at <= handled or now.timestamp() * 1000 - at > REFRESH_STALE.total_seconds() * 1000:
+        return None
+    return at
+
+
+def nap(seconds: float, fs, sleep, clock, handled: int) -> bool:
+    """Sleep `seconds`; with a store that carries the pull-down, look for one every POLL
+    seconds. True = the app asked for fresh numbers (stop sleeping and grab)."""
+    if not hears(fs):
+        sleep(seconds)
+        return False
+    end = clock() + timedelta(seconds=seconds)
+    while True:
+        left = (end - clock()).total_seconds()
+        if left <= 0:
+            return False
+        sleep(min(POLL, left))
+        if pending_refresh(fs, clock(), handled):
+            return True
 
 
 def next_midnight(now: datetime) -> datetime:
@@ -342,6 +392,12 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
     log(f"Robot run {store.iso(started)} | {'DRY RUN (saves nothing)' if dry_run else 'LIVE'} | "
         f"Firebase {'ON -> collection splits' if fs else 'OFF (nothing will be saved)'}")
     mem_plan: dict = {}
+    handled = 0  # the last pull-down answered
+    if hears(fs):
+        try:
+            handled = int(fs.get_refresh_done().get("handled") or 0)
+        except Exception:
+            handled = 0
     while True:
         now = clock()
         day = slate_day(now)
@@ -386,6 +442,24 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
             fd.pull(t.sport, "T-10", now, only_keys=t.keys)
             plan["done"].append(t.tid)
 
+        # the app's pull-down: every game still to start, splits + FanDuel, right now
+        req = pending_refresh(fs, now, handled)
+        if req:
+            active = [s for s in sports if any(eligible(g, now) for g in games.get(s, []))]
+            keys = {g.key: "refresh" for s in active for g in games.get(s, []) if eligible(g, now)}
+            log(f"  PULL-DOWN REFRESH (the app asked): {', '.join(active) or 'no games'}, {len(keys)} game(s)")
+            got = grab(active, games, now, keys, log)
+            save_rows(fs, got, day_s, log, "pull-down refresh")
+            rows += got
+            for s in active:
+                fd.pull(s, "refresh", now)
+            handled = req
+            try:
+                fs.set_refresh_done({"handled": req, "at": store.iso(clock()), "games": len(keys),
+                                     "splitsSaved": len(got), "credits": fd.credits})
+            except Exception as e:
+                log(f"  pull-down answer not saved ({e}) - the app times out and shows what is saved")
+
         if fs:
             fs.set_plan(plan)
         else:
@@ -405,14 +479,15 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
             pause = (deadline - clock()).total_seconds()
             if pause > 0:
                 log(f"  sleeping until {deadline.astimezone(dk.ET):%I:%M %p ET}, then handing off to a fresh run")
-                sleep(pause)
+                if nap(pause, fs, sleep, clock, handled):
+                    continue  # a pull-down came in: grab it, then back to sleep
             dispatch(log)
             return 0
         pause = (when - clock()).total_seconds()
         if pause > 0:
             what = f"10 minutes before {nxt.sport} ({len(nxt.keys)} game(s))" if nxt else "midnight: the next morning grab"
             log(f"  sleeping until {when.astimezone(dk.ET):%I:%M %p ET} - {what}")
-            sleep(pause)
+            nap(pause, fs, sleep, clock, handled)  # a pull-down wakes it early; the loop grabs it
 
 
 def summarize(rows: list[dict], log) -> None:

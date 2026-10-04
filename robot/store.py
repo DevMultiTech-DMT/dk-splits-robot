@@ -18,6 +18,11 @@ COLLECTION = "splits"  # the ONLY collection the robot may write
 CHECK_DOC = "_robot_check"  # self-test doc; never a game key, so the app never reads it
 STATE_DOC = "_robot_state"  # today's FanDuel credit use; carries `day`, so it resets at midnight
 PLAN_DOC = "_robot_plan"  # today's grabs done (morning + each 10-minute grab); carries `day` too
+# the app's PULL-DOWN (user 10/3: "when I pull down to refresh, everything gets pulled exactly
+# when I do that"): the app writes `settings/refresh` {requestedAt}; the robot answers here
+# {handled: requestedAt, at, ...} and the app waits for that answer. No `day` field, so the
+# midnight clean-up leaves it alone.
+REFRESH_DOC = "_robot_refresh"
 
 
 def iso(dt: datetime) -> str:
@@ -229,6 +234,19 @@ class Firestore:
         snap = self.db.collection("settings").document("app").get()
         v = (snap.to_dict() or {}).get("autoFill") if snap.exists else None
         return v if isinstance(v, bool) else None
+
+    def get_refresh_request(self) -> int | None:
+        """The app's pull-down (READ-ONLY `settings/refresh` {requestedAt: ms}), or None."""
+        snap = self.db.collection("settings").document("refresh").get()
+        v = (snap.to_dict() or {}).get("requestedAt") if snap.exists else None
+        return int(v) if isinstance(v, (int, float)) and not isinstance(v, bool) else None
+
+    def get_refresh_done(self) -> dict:
+        snap = self._col().document(REFRESH_DOC).get()
+        return (snap.to_dict() or {}) if snap.exists else {}
+
+    def set_refresh_done(self, done: dict) -> None:
+        self._col().document(REFRESH_DOC).set(done)
 
     def get_state(self) -> dict:
         snap = self._col().document(STATE_DOC).get()

@@ -69,7 +69,10 @@ class FanDuel(unittest.TestCase):
         self.assertTrue(a("morning", 99, 16, 400))  # the morning line ignores the day cap
         self.assertTrue(a("T-10", 5, 16, 400))
         self.assertFalse(a("T-10", 16, 16, 400))  # cap reached
-        self.assertFalse(a("refresh", 0, 666, 19000))  # nothing else, on any plan
+        self.assertFalse(a("sweep", 0, 666, 19000))  # nothing else, on any plan
+        # the app's pull-down (user 10/3: "everything, every time"): past the day's cap too
+        self.assertTrue(a("refresh", 16, 16, 400))
+        self.assertFalse(a("refresh", 0, 16, fanduel.FLOOR))  # the floor still holds
         # nearly out: nothing, not even the morning line
         self.assertFalse(a("morning", 0, 0, fanduel.FLOOR))
         self.assertFalse(a("morning", 0, 16, None))
@@ -168,6 +171,25 @@ class FanDuelPulls(unittest.TestCase):
         tb = next(x.key for x in MLB_1003 if x.home.abbr == "TB")
         self.assertEqual((fs.docs[tb]["fdSpAway"], fs.docs[tb]["fdSpHome"]),
                          ({"point": 1.5, "price": -210}, {"point": -1.5, "price": 172}))
+
+    def test_pull_down_refresh_is_counted_apart_and_never_blocks_the_10_minute_grab(self):
+        fs, calls = FakeFirestore(), []
+        fs.docs[store.STATE_DOC] = {"day": "2026-10-03", "oddsUsed": 16, "oddsCap": 16, "lastPull": {}}
+        p = self.puller(fs, calls=calls)
+        p.pull("MLB", "refresh", NOW_1003)  # cap used up: the pull-down still goes
+        self.assertEqual(len(calls), 1)
+        st = fs.docs[store.STATE_DOC]
+        self.assertEqual((st["oddsUsed"], st["refreshUsed"]), (16, 1))  # counted apart
+        p.pull("MLB", "refresh", NOW_1003 + timedelta(seconds=40))  # a second pull-down inside a minute
+        self.assertEqual(len(calls), 1)
+        p.pull("MLB", "refresh", NOW_1003 + timedelta(seconds=70))
+        self.assertEqual(len(calls), 2)
+        # a pull-down 2 minutes before a 10-minute grab never makes that grab skip (own clock)
+        fs2, calls2 = FakeFirestore(), []
+        p2 = self.puller(fs2, calls=calls2)
+        p2.pull("MLB", "refresh", NOW_1003)
+        p2.pull("MLB", "T-10", NOW_1003 + timedelta(minutes=2))
+        self.assertEqual(len(calls2), 2)
 
     def test_never_the_same_sport_twice_inside_5_minutes(self):
         fs, calls = FakeFirestore(), []
