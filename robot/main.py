@@ -37,6 +37,15 @@ AFTER_MIDNIGHT = timedelta(minutes=2)  # the morning grab, just after the day tu
 # to start (splits + FanDuel); a request older than REFRESH_STALE was given up on by the app
 POLL = 15
 REFRESH_STALE = timedelta(minutes=10)
+# FILL-IN (user 10/4: NHL + MLB splits and one MLB moneyline were empty all day -- DraftKings and
+# FanDuel hadn't posted them at the 12:02 AM grab, and nothing looked again until 10 minutes
+# before): after the morning, a game still missing its splits is looked for again every
+# FILL_EVERY (DraftKings is free); one missing its FanDuel line gets a FanDuel pull at most
+# FD_FILL_MAX times a day per sport, FD_FILL_GAP apart, and only once The Odds API's FREE event
+# list shows the game. The first numbers found become that game's morning numbers.
+FILL_EVERY = timedelta(minutes=30)
+FD_FILL_GAP = timedelta(hours=2)
+FD_FILL_MAX = 3
 
 
 def utcnow() -> datetime:
@@ -152,9 +161,10 @@ class FanDuelPuller:
     Budget state (today's credits used, last pull per sport, today's cap) lives in the
     `_robot_state` doc, which carries `day` and so is cleared at midnight like the rest."""
 
-    def __init__(self, key, fs, games, day_s, log, now, fetch=None, credits_fn=None):
+    def __init__(self, key, fs, games, day_s, log, now, fetch=None, credits_fn=None, events_fn=None):
         self.key, self.fs, self.games, self.day_s, self.log = key, fs, games, day_s, log
         self.fetch = fetch or fanduel.fetch
+        self.events_fn = events_fn or fanduel.events_listed
         self.lines: list[dict] = []
         self.credits: int | None = None
         self.state: dict = {}
@@ -188,36 +198,55 @@ class FanDuelPuller:
         about to start -- the other games keep their own lines until their own T-10), or
         'refresh' (the app's pull-down: every game of the sport still to start)."""
         if not self.on:
-            return
+            return 0
         st = self.state
         refresh = kind == "refresh"
+        fill = kind == "fill"
         last = st.setdefault("lastPull", {}).get(sport)
         last_refresh = st.setdefault("lastRefresh", {}).get(sport)
         if refresh:
             newest = max((_parse_iso(x) for x in (last, last_refresh) if x), default=None)
             if newest and now - newest < fanduel.REFRESH_GAP:
-                return
+                return 0
+        elif fill:
+            last_fill = st.setdefault("lastFill", {}).get(sport)
+            if st.setdefault("fills", {}).get(sport, 0) >= FD_FILL_MAX:
+                return 0
+            if last_fill and now - _parse_iso(last_fill) < FD_FILL_GAP:
+                return 0
         elif last and now - _parse_iso(last) < fanduel.MIN_GAP:
-            return
+            return 0
         if not fanduel.allowed(kind, st.get("oddsUsed", 0), st.get("oddsCap", 0), self.credits):
             self.log(f"  FanDuel {sport}: {kind} pull skipped (budget: used {st.get('oddsUsed', 0)} of "
                      f"{st.get('oddsCap', 0)} today, {self.credits} left)")
-            return
+            return 0
         elig = [g for g in self.games.get(sport, []) if eligible(g, now) and (only_keys is None or g.key in only_keys)]
         if not elig:
-            return
+            return 0
         to = max(g.start_utc for g in elig) + timedelta(minutes=30)
+        if fill:  # FREE look first: not listed yet = no paid pull, no attempt used
+            try:
+                listed = self.events_fn(sport, self.key, now, to)
+            except Exception:
+                listed = None
+            if listed is not None and not any(match_teams(sport, a, h, t, elig) for a, h, t in listed):
+                self.log(f"  FanDuel {sport} (fill-in): {len(elig)} missing game(s) not listed yet - no credit spent")
+                return 0
         try:
             events, rem = self.fetch(sport, self.key, now, to)
         except Exception as e:
             self.log(f"  FanDuel {sport}: pull FAILED ({e})")
-            return
+            return 0
         cost = (self.credits - rem) if (rem is not None and self.credits is not None) else (1 if events else 0)
         if rem is not None:
             self.credits = rem
         if refresh:  # counted apart: a pull-down never uses up the day's 10-minute grabs
             st["refreshUsed"] = st.get("refreshUsed", 0) + max(cost, 0)
             st["lastRefresh"][sport] = store.iso(now)
+        elif fill:  # counted apart too: a fill-in never uses up the 10-minute grabs
+            st["fillUsed"] = st.get("fillUsed", 0) + max(cost, 0)
+            st["lastFill"][sport] = store.iso(now)
+            st["fills"][sport] = st["fills"].get(sport, 0) + 1
         else:
             st["oddsUsed"] = st.get("oddsUsed", 0) + max(cost, 0)
             st["lastPull"][sport] = store.iso(now)
@@ -247,6 +276,7 @@ class FanDuelPuller:
                                "kind": kind, "away": a, "home": h})
         self.log(f"  FanDuel {sport} ({kind}): {len(matched)} game(s) matched of {len(events)}, "
                  f"cost {cost}, {self.credits} credits left")
+        return len(matched)
 
 
 @dataclass
@@ -280,6 +310,32 @@ def plan_targets(games: dict, now: datetime, done: set) -> list[Target]:
             if tid not in done:
                 out.append(Target(when, sport, {g.key for _, g in cluster}, tid))
     return sorted(out, key=lambda t: t.when)
+
+
+def fill_missing(fs, fd, sports, games, now, day_s, log) -> tuple[list[dict], bool]:
+    """Games still to start that have no splits / no FanDuel line yet (not posted at the
+    morning grab): DraftKings again (free), FanDuel within FD_FILL_MAX / FD_FILL_GAP.
+    -> (rows saved, anything still missing)."""
+    elig = {g.key: s for s in sports for g in games.get(s, []) if eligible(g, now)}
+    if not elig:
+        return [], False
+    ex = fs.existing(sorted(elig))
+    no_dk = {k for k in elig if ex.get(k, {}).get("pubBetsHome") is None}
+    # a FanDuel line is missing without its moneyline, or -- MLB/NHL/NFL -- without its main
+    # spread (10/4: NFL spreads came on the pull only from today; MLB/NHL run/puck lines too)
+    no_fd = {k for k in elig if ex.get(k, {}).get("fdMlAway") is None
+             or (elig[k] in fanduel.SPREAD_SPORTS and ex.get(k, {}).get("fdSpHome") is None)}
+    rows: list[dict] = []
+    if no_dk:
+        rows = grab(sorted({elig[k] for k in no_dk}), games, now, {k: "morning" for k in no_dk}, log)
+        save_rows(fs, rows, day_s, log, "fill-in (not posted at the morning grab)")
+    for s in sorted({elig[k] for k in no_fd}):
+        fd.pull(s, "fill", now, only_keys={k for k in no_fd if elig[k] == s})
+    found = {r["key"] for r in rows if r.get("key")}
+    if no_dk or no_fd:
+        log(f"  FILL-IN: {len(no_dk)} game(s) without splits ({len(no_dk & found)} found now), "
+            f"{len(no_fd)} without a FanDuel line")
+    return rows, bool(no_dk - found) or bool(no_fd)
 
 
 def hears(fs) -> bool:
@@ -442,6 +498,15 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
             fd.pull(t.sport, "T-10", now, only_keys=t.keys)
             plan["done"].append(t.tid)
 
+        # games the morning grab couldn't get (not posted yet at midnight)
+        if plan["morningDone"] and fs is not None:
+            last_fill = plan.get("fillAt")
+            if not last_fill or now - _parse_iso(last_fill) >= FILL_EVERY - timedelta(seconds=30):
+                got, pending = fill_missing(fs, fd, sports, games, now, day_s, log)
+                rows += got
+                plan["fillAt"] = store.iso(now)
+                plan["fillPending"] = pending
+
         # the app's pull-down: every game still to start, splits + FanDuel, right now
         req = pending_refresh(fs, now, handled)
         if req:
@@ -473,6 +538,10 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
         upcoming = plan_targets(games, clock(), set(plan["done"]))
         nxt = upcoming[0] if upcoming else None
         when = nxt.when if nxt else next_midnight(clock())
+        if plan.get("fillPending") and plan.get("fillAt"):  # look again for what's still missing
+            fill_at = _parse_iso(plan["fillAt"]) + FILL_EVERY
+            if fill_at < when:
+                when, nxt = fill_at, None
         if stop_at is not None and when > stop_at:
             return 0
         if when > deadline:
@@ -485,7 +554,9 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
             return 0
         pause = (when - clock()).total_seconds()
         if pause > 0:
-            what = f"10 minutes before {nxt.sport} ({len(nxt.keys)} game(s))" if nxt else "midnight: the next morning grab"
+            what = (f"10 minutes before {nxt.sport} ({len(nxt.keys)} game(s))" if nxt
+                    else "a fill-in look for games not posted yet" if plan.get("fillPending")
+                    else "midnight: the next morning grab")
             log(f"  sleeping until {when.astimezone(dk.ET):%I:%M %p ET} - {what}")
             nap(pause, fs, sleep, clock, handled)  # a pull-down wakes it early; the loop grabs it
 

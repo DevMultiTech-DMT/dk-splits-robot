@@ -337,7 +337,11 @@ class Runs(unittest.TestCase):
 
     def test_a_morning_the_earlier_robot_took_is_not_taken_again(self):
         # 10/3: the 05:34 UTC morning grab came from the previous robot version (no plan doc)
-        fs = FakeFirestore({store.STATE_DOC: {"day": "2026-09-26", "lastPull": {"MLB": "2026-09-26T05:34:00Z"}}})
+        fs = FakeFirestore({store.STATE_DOC: {"day": "2026-09-26", "lastPull": {"MLB": "2026-09-26T05:34:00Z"}},
+                            # what that earlier morning grab saved for PIT @ DET
+                            "MLB-824219": {"key": "MLB-824219", "day": "2026-09-26", "pubBetsHome": 30,
+                                           "morningBetsHome": 30, "fdMlAway": 120,
+                                           "fdSpHome": {"point": -1.5, "price": 130}}})
         rows, _, logs, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), fs)
         self.assertEqual([r["phase"] for r in rows], ["T-10"])
         self.assertFalse(any("MORNING" in x for x in logs))
@@ -393,6 +397,46 @@ class Runs(unittest.TestCase):
         fs = RefreshFirestore(requests=[(asked, int(asked.timestamp() * 1000))])
         rows, _, _, _ = self.run_robot(start, fs)
         self.assertEqual([r["phase"] for r in rows if r["key"] == "MLB-824219"][:2], ["morning", "refresh"])
+
+    def test_a_game_not_posted_at_the_morning_grab_is_filled_in_30_minutes_later(self):
+        # user 10/4: NHL + MLB splits were empty all day -- DraftKings hadn't posted them at
+        # 12:02 AM and nothing looked again until 10 minutes before the game
+        g = dk_games("dk_mlb_p1.html")[0]  # PIT @ DET, 17:10 UTC
+        start = datetime(2026, 9, 26, 15, 0, tzinfo=timezone.utc)
+        clock = {"t": start}
+        posted_at = start + timedelta(minutes=20)  # DK posts the game 20 minutes after the morning grab
+        fs, rows, logs = FakeFirestore(), [], []
+
+        def sleep(sec):
+            clock["t"] += timedelta(seconds=sec)
+
+        saved = official.games_for, dk.fetch_league, store.firestore_from_env, main.summarize
+        real_sleep = main.time.sleep
+        main.time.sleep = lambda s: None  # DK's one empty-answer retry waits 5 s for real otherwise
+        official.games_for = lambda s, d: MLB if s == "MLB" else []
+        dk.fetch_league = lambda s, ed="today": [g] if clock["t"] >= posted_at else []
+        store.firestore_from_env = lambda: fs
+        main.summarize = lambda r, log: rows.extend(r)
+        try:
+            main.run(dry_run=False, wait=True, sports=["MLB"], log=logs.append, sleep=sleep,
+                     clock=lambda: clock["t"], stop_at=start + timedelta(minutes=50),
+                     dispatch=lambda log: True, job_minutes=main.JOB_MINUTES)
+        finally:
+            official.games_for, dk.fetch_league, store.firestore_from_env, main.summarize = saved
+            main.time.sleep = real_sleep
+        det = fs.docs["MLB-824219"]
+        self.assertEqual(det["grabbedAt"], "2026-09-26T15:30:00Z")  # the first fill-in look after it was posted
+        self.assertEqual((det["morningBetsHome"], det["phase"]), (det["pubBetsHome"], "morning"))  # its morning number
+        self.assertTrue(any("FILL-IN" in x for x in logs))
+
+    def test_nothing_missing_means_no_extra_wake_ups(self):
+        # every game already has its numbers: the robot sleeps straight to the 10-minute grab
+        fs = FakeFirestore({"MLB-824219": {"key": "MLB-824219", "day": "2026-09-26", "pubBetsHome": 30,
+                                           "morningBetsHome": 30, "fdMlAway": 120,
+                                           "fdSpHome": {"point": -1.5, "price": 130}}})
+        only_det = [x for x in MLB if x.key == "MLB-824219"]
+        _, slept, _, _ = self.run_robot(datetime(2026, 9, 26, 16, 45, tzinfo=timezone.utc), fs, games=only_det)
+        self.assertEqual(slept, [900.0])
 
     def test_same_sport_starts_within_6_minutes_share_one_grab(self):
         base = next(x for x in MLB if x.key == "MLB-824219")  # 17:10 UTC

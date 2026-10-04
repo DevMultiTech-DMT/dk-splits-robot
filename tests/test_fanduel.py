@@ -191,6 +191,45 @@ class FanDuelPulls(unittest.TestCase):
         p2.pull("MLB", "T-10", NOW_1003 + timedelta(minutes=2))
         self.assertEqual(len(calls2), 2)
 
+    def test_fill_in_pull_only_when_listed_at_most_3_a_day_2_hours_apart(self):
+        # user 10/4: one MLB game had no FanDuel line all day (not posted at the 12:02 AM grab)
+        fs, calls = FakeFirestore(), []
+        p = self.puller(fs, calls=calls)
+        listed = {"now": []}
+        p.events_fn = lambda sport, key, frm, to: listed["now"]
+        t = NOW_1003
+        self.assertEqual(p.pull("MLB", "fill", t), 0)  # not listed yet: free look only, no pull
+        self.assertEqual(calls, [])
+        ev = next(e for e in fanduel.parse_events(load("fd_mlb_1003.json")) if "Dodgers" in e.home)
+        listed["now"] = [(ev.away, ev.home, ev.start_utc)]
+        p.pull("MLB", "fill", t)
+        self.assertEqual(len(calls), 1)
+        st = fs.docs[store.STATE_DOC]
+        self.assertEqual((st["fills"]["MLB"], st.get("oddsUsed", 0)), (1, 0))  # counted apart
+        self.assertGreaterEqual(st["fillUsed"], 1)
+        p.pull("MLB", "fill", t + timedelta(minutes=90))  # inside 2 hours: no
+        self.assertEqual(len(calls), 1)
+        for h in (2, 4, 6, 8):
+            p.pull("MLB", "fill", t + timedelta(hours=h))
+        self.assertEqual(len(calls), 3)  # at most 3 a day
+
+    def test_nba_preseason_key_asked_too_and_nfl_carries_its_spread(self):
+        # 10/4: the NBA preseason (UTAH @ DEN, GS @ LAC) is only under basketball_nba_preseason
+        urls = []
+
+        def get(url):
+            urls.append(url)
+            if "preseason" in url and "nfl" in url:
+                return 404, '{"message": "Unknown sport"}', {}  # an off-season key: skipped
+            return 200, "[]", {"x-requests-remaining": "400"}
+
+        fanduel.fetch("NBA", "k", NOW_1003, NOW_1003 + timedelta(hours=6), get=get)
+        self.assertEqual([u.split("/sports/")[1].split("/")[0] for u in urls], ["basketball_nba", "basketball_nba_preseason"])
+        urls.clear()
+        games, left = fanduel.fetch("NFL", "k", NOW_1003, NOW_1003 + timedelta(hours=6), get=get)
+        self.assertEqual((games, left), ([], 400))
+        self.assertIn("markets=h2h%2Cspreads", urls[0])  # the NFL spread rides the same pull
+
     def test_never_the_same_sport_twice_inside_5_minutes(self):
         fs, calls = FakeFirestore(), []
         p = self.puller(fs, calls=calls)

@@ -30,6 +30,13 @@ SPORT_KEYS = {
     "CFB": "americanfootball_ncaaf",
     "NHL": "icehockey_nhl",
 }
+# The Odds API keeps PRESEASON games under their own key (checked 10/4: the NBA preseason --
+# UTAH @ DEN, GS @ LAC -- is only in basketball_nba_preseason; basketball_nba starts 10/20).
+# A pull whose window holds no games costs nothing, so asking both keys is free off-season.
+EXTRA_KEYS = {
+    "NBA": ("basketball_nba_preseason",),
+    "NFL": ("americanfootball_nfl_preseason",),
+}
 
 # --- budget -----------------------------------------------------------------
 FLOOR = 10  # never spend below this many credits (kept back for manual checks)
@@ -65,7 +72,7 @@ def allowed(kind: str, used_today: int, cap: int, credits: int | None) -> bool:
     they never use up the day's 10-minute grabs."""
     if credits is None or credits <= FLOOR:
         return False
-    if kind in ("morning", "refresh"):
+    if kind in ("morning", "refresh", "fill"):  # "fill": per-sport count + gap kept by the puller
         return True
     return kind == "T-10" and used_today < cap
 
@@ -92,7 +99,7 @@ class FdGame:
 # 10/3 (user: option boxes "should just fill automatically"): the run line / puck line is
 # FanDuel's MAIN spread, so the same per-sport pull can carry it for every game: +1 credit
 # per pull instead of 1 credit per game (13 NHL puck-line boxes on 10/3 alone).
-SPREAD_SPORTS = ("MLB", "NHL")
+SPREAD_SPORTS = ("MLB", "NHL", "NFL")  # NFL added 10/4 (user: the NFL spread boxes stayed empty)
 
 
 def _get(url: str, timeout: int = 30):
@@ -155,15 +162,48 @@ def parse_events(payload) -> list[FdGame]:
     return out
 
 
+def sport_keys(sport: str) -> tuple[str, ...]:
+    return (SPORT_KEYS[sport],) + EXTRA_KEYS.get(sport, ())
+
+
 def fetch(sport: str, key: str, frm: datetime, to: datetime, get=_get) -> tuple[list[FdGame], int | None]:
-    """FanDuel moneylines (+ the main run/puck line for MLB/NHL) for `sport` games starting
-    in [frm, to]. 1 credit per market (h2h, + spreads for MLB/NHL); 0 if no games."""
+    """FanDuel moneylines (+ the main spread for MLB/NHL/NFL) for `sport` games starting in
+    [frm, to]. 1 credit per market (h2h, + spreads); 0 if no games. The preseason key is
+    asked too (free when it has no games); only the main key's failure is an error."""
     markets = "h2h,spreads" if sport in SPREAD_SPORTS else "h2h"
     q = urllib.parse.urlencode({
         "apiKey": key, "bookmakers": "fanduel", "markets": markets, "oddsFormat": "american",
         "dateFormat": "iso", "commenceTimeFrom": _iso(frm), "commenceTimeTo": _iso(to),
     })
-    status, body, headers = get(f"{BASE}/sports/{SPORT_KEYS[sport]}/odds/?{q}")
-    if status != 200:
-        raise OddsApiError(f"HTTP {status}: {body[:160]}")
-    return parse_events(json.loads(body)), _remaining(headers)
+    games: list[FdGame] = []
+    left = None
+    for i, sk in enumerate(sport_keys(sport)):
+        status, body, headers = get(f"{BASE}/sports/{sk}/odds/?{q}")
+        if status != 200:
+            if i == 0:
+                raise OddsApiError(f"HTTP {status}: {body[:160]}")
+            continue  # an off-season preseason key: nothing to add
+        games += parse_events(json.loads(body))
+        left = _remaining(headers) if _remaining(headers) is not None else left
+    return games, left
+
+
+def events_listed(sport: str, key: str, frm: datetime, to: datetime, get=_get) -> list[tuple[str, str, datetime]]:
+    """FREE (GET /events costs nothing): the games The Odds API lists for `sport` in [frm, to]
+    as (away, home, start). Used before a paid fill-in pull: no listed game, no credit."""
+    q = urllib.parse.urlencode({"apiKey": key, "dateFormat": "iso",
+                                "commenceTimeFrom": _iso(frm), "commenceTimeTo": _iso(to)})
+    out = []
+    for i, sk in enumerate(sport_keys(sport)):
+        status, body, _ = get(f"{BASE}/sports/{sk}/events/?{q}")
+        if status != 200:
+            if i == 0:
+                raise OddsApiError(f"HTTP {status} on /events")
+            continue
+        for e in json.loads(body) if body else []:
+            try:
+                out.append((e["away_team"], e["home_team"],
+                            datetime.fromisoformat(e["commence_time"].replace("Z", "+00:00"))))
+            except (KeyError, ValueError):
+                continue
+    return out
