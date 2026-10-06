@@ -62,8 +62,10 @@ class FanDuel(unittest.TestCase):
         self.assertEqual(
             (fanduel.day_cap(500, NOW_1003), fanduel.day_cap(497, NOW_1003), fanduel.day_cap(20000, NOW_1003),
              fanduel.day_cap(5, NOW_1003)),
-            (16, 16, 689, 0),
+            # user 10/5 "spend faster": everything above the floor and 28 more mornings (8 each)
+            (266, 263, 19766, 0),
         )
+        self.assertEqual(fanduel.morning_reserve(NOW_1003), 8 * 28)
         a = fanduel.allowed
         # the two grabs only: the morning line + the 10-minute line
         self.assertTrue(a("morning", 99, 16, 400))  # the morning line ignores the day cap
@@ -230,6 +232,18 @@ class FanDuelPulls(unittest.TestCase):
         self.assertEqual((games, left), ([], 400))
         self.assertIn("markets=h2h%2Cspreads", urls[0])  # the NFL spread rides the same pull
 
+    def test_spend_faster_every_10_minute_grab_goes_while_credits_last_above_the_reserve(self):
+        # user 10/5: ATL @ NO's 8:05 PM grab was skipped -- the old even split (12 a day) was
+        # used up by MLB/NHL/NBA. Now: 337 left on 10/6 -> 25 more mornings x 8 = 200 kept.
+        now = datetime(2026, 10, 6, 0, 5, tzinfo=timezone.utc)
+        self.assertEqual(fanduel.day_cap(337, now), 337 - 10 - 200)
+        fs, calls = FakeFirestore(), []
+        fs.docs[store.STATE_DOC] = {"day": "2026-10-03", "oddsUsed": 12, "oddsCap": 12, "creditsAtCap": 480, "lastPull": {}}
+        p = self.puller(fs, calls=calls)  # 480 left: plenty above the reserve
+        self.assertGreater(p.state["oddsCap"], 12)
+        p.pull("MLB", "T-10", NOW_1003)  # the 13th credit of the day still goes
+        self.assertEqual(len(calls), 1)
+
     def test_never_the_same_sport_twice_inside_5_minutes(self):
         fs, calls = FakeFirestore(), []
         p = self.puller(fs, calls=calls)
@@ -237,10 +251,11 @@ class FanDuelPulls(unittest.TestCase):
         p.pull("MLB", "T-10", NOW_1003 + timedelta(minutes=3))  # same sport, too soon
         self.assertEqual(len(calls), 1)
 
-    def test_day_cap_stops_the_10_minute_line_but_never_the_morning(self):
+    def test_the_morning_reserve_stops_the_10_minute_line_but_never_the_morning(self):
         fs, calls = FakeFirestore(), []
         fs.docs[store.STATE_DOC] = {"day": "2026-10-03", "oddsUsed": 16, "oddsCap": 16, "lastPull": {}}
-        p = self.puller(fs, calls=calls)
+        # 234 left on 10/3 = FLOOR 10 + 28 mornings x 8: nothing to spare for 10-minute grabs
+        p = self.puller(fs, credits=234, calls=calls)
         p.pull("MLB", "T-10", NOW_1003)
         self.assertEqual(calls, [])
         p.pull("MLB", "morning", NOW_1003)
@@ -262,13 +277,15 @@ class FanDuelPulls(unittest.TestCase):
         fs.docs[store.STATE_DOC] = {"day": "2026-10-03", "oddsUsed": 16, "oddsCap": 16, "creditsAtCap": 480, "lastPull": {}}
         os.environ["ODDS_CAP_TODAY"] = "2026-10-03=36"
         try:
-            p = self.puller(fs, calls=calls)
+            p = self.puller(fs, credits=234, calls=calls)  # nothing above the morning reserve
             self.assertEqual(p.state["oddsCap"], 36)
             p.pull("MLB", "T-10", NOW_1003)  # 16 used < 36 -> the 10-minute line still goes
             self.assertEqual(len(calls), 1)
             os.environ["ODDS_CAP_TODAY"] = "2026-10-02=36"  # another day: no raise
             fs.docs[store.STATE_DOC]["oddsCap"] = 16
-            self.assertEqual(self.puller(FakeFirestore({store.STATE_DOC: dict(fs.docs[store.STATE_DOC])})).state["oddsCap"], 16)
+            later = self.puller(FakeFirestore({store.STATE_DOC: dict(fs.docs[store.STATE_DOC])}), credits=234)
+            # no raise: the live budget is just what's used (nothing above the morning reserve)
+            self.assertEqual(later.state["oddsCap"], later.state["oddsUsed"])
         finally:
             del os.environ["ODDS_CAP_TODAY"]
 

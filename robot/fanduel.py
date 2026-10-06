@@ -57,10 +57,23 @@ def days_left(now: datetime) -> int:
     return max(1, math.ceil((next_reset(now) - now).total_seconds() / 86400))
 
 
+# SPEND FASTER (user 10/5, after ATL @ NO's 8:05 PM grab was skipped by the old even daily
+# split -- chosen over a paid plan): every 10-minute grab goes while credits last ABOVE a
+# reserve that pays each remaining day's midnight grab until the reset. The month's last
+# stretch may get only midnight grabs. MORNING_PER_DAY ~ MLB 2 + NHL 2 + NFL 2 + CFB 1 + NBA 1.
+MORNING_PER_DAY = 8
+
+
+def morning_reserve(now: datetime) -> int:
+    """Credits kept for the midnight grab of every day after today, until the reset."""
+    return MORNING_PER_DAY * (days_left(now) - 1)
+
+
 def day_cap(credits: int, now: datetime) -> int:
-    """Today's share: (credits left - FLOOR) spread over the days until the reset. On the
-    month's last day that is everything left -- unused credits don't carry over."""
-    return max(0, (credits - FLOOR) // days_left(now))
+    """What the 10-minute grabs may still spend from now: credits above FLOOR and the
+    morning reserve. On the month's last day that is everything left (unused credits
+    don't carry over)."""
+    return max(0, credits - FLOOR - morning_reserve(now))
 
 
 def allowed(kind: str, used_today: int, cap: int, credits: int | None) -> bool:
