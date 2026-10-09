@@ -244,6 +244,47 @@ class FanDuelPulls(unittest.TestCase):
         p.pull("MLB", "T-10", NOW_1003)  # the 13th credit of the day still goes
         self.assertEqual(len(calls), 1)
 
+    def multi(self, fs, left, calls, fail_key=None):
+        """A puller over several accounts; `left` = credits per key, spent by each pull."""
+        events = fanduel.parse_events(load("fd_mlb_1003.json"))
+
+        def fetch(sport, key, frm, to):
+            if key == fail_key:
+                raise fanduel.OddsApiError('HTTP 401: {"message":"Usage quota has been reached","error_code":"OUT_OF_USAGE_CREDITS"}')
+            calls.append(key)
+            left[key] -= 1
+            return [e for e in events if frm <= e.start_utc <= to], left[key]
+
+        return main.FanDuelPuller(list(left), fs, {"MLB": MLB_1003}, "2026-10-03", lambda *_: None, NOW_1003,
+                                  fetch=fetch, credits_fn=lambda k: left[k])
+
+    def test_three_accounts_used_in_order_each_down_to_the_floor(self):
+        # user 10/8: "if my first account runs out of credits, it shouldn't break the whole app.
+        # It can just use my next account"
+        calls, left = [], {"k1": fanduel.FLOOR + 2, "k2": 500, "k3": 500}
+        p = self.multi(FakeFirestore(), left, calls)
+        for i in range(4):
+            p.pull("MLB", "refresh", NOW_1003 + timedelta(minutes=2 * i))
+        self.assertEqual(calls, ["k1", "k1", "k2", "k2"])  # k1 stops at the floor, k2 takes over
+        self.assertEqual(left["k1"], fanduel.FLOOR)
+        # the budget counts every account together
+        p2 = self.multi(FakeFirestore(), {"k1": 241, "k2": 500, "k3": 500}, [])
+        self.assertEqual(p2.pooled(), fanduel.FLOOR + 231 + 490 + 490)
+
+    def test_an_account_that_runs_dry_mid_pull_hands_the_same_pull_to_the_next(self):
+        calls, left = [], {"k1": 300, "k2": 500}
+        p = self.multi(FakeFirestore(), left, calls, fail_key="k1")  # k1's quota hit without warning
+        self.assertGreater(p.pull("MLB", "morning", NOW_1003), 0)
+        self.assertEqual(calls, ["k2"])
+        self.assertEqual(p.left["k1"], 0)
+        self.assertEqual(p.key, "k2")
+
+    def test_every_account_used_up_pulls_nothing_and_breaks_nothing(self):
+        calls, left = [], {"k1": fanduel.FLOOR, "k2": fanduel.FLOOR}
+        p = self.multi(FakeFirestore(), left, calls)
+        self.assertEqual(p.pull("MLB", "morning", NOW_1003), 0)
+        self.assertEqual((calls, p.key, p.credits), ([], "", 0))
+
     def test_never_the_same_sport_twice_inside_5_minutes(self):
         fs, calls = FakeFirestore(), []
         p = self.puller(fs, calls=calls)

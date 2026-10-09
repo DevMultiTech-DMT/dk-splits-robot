@@ -162,23 +162,31 @@ class FanDuelPuller:
     `_robot_state` doc, which carries `day` and so is cleared at midnight like the rest."""
 
     def __init__(self, key, fs, games, day_s, log, now, fetch=None, credits_fn=None, events_fn=None):
-        self.key, self.fs, self.games, self.day_s, self.log = key, fs, games, day_s, log
+        # ONE key or SEVERAL (user 10/8: three Odds API accounts -- "if my first account runs
+        # out of credits ... it can just use my next account"): used in order, each down to
+        # FLOOR, then the next one takes over. The budget counts all of them together.
+        self.keys = [k for k in ([key] if isinstance(key, str) else list(key or [])) if k]
+        self.fs, self.games, self.day_s, self.log = fs, games, day_s, log
         self.fetch = fetch or fanduel.fetch
         self.events_fn = events_fn or fanduel.events_listed
         self.lines: list[dict] = []
-        self.credits: int | None = None
+        self.left: dict[str, int | None] = {}
         self.state: dict = {}
-        self.on = bool(key)
+        self.on = bool(self.keys)
         if not self.on:
             return
-        try:
-            self.credits = (credits_fn or fanduel.credits_left)(key)
-        except Exception as e:
-            log(f"  FanDuel: key check FAILED ({e}) - no odds this run")
+        for k in self.keys:
+            try:
+                self.left[k] = (credits_fn or fanduel.credits_left)(k)
+            except Exception as e:
+                log(f"  FanDuel: key ...{k[-4:]} check FAILED ({e}) - not used this run")
+                self.left[k] = None
+        if all(c is None for c in self.left.values()):
+            log("  FanDuel: no working key - no odds this run")
             self.on = False
             return
         st = fs.get_state() if fs else {}
-        credits = self.credits or 0
+        credits = self.pooled()
         if st.get("day") != day_s:
             st = {"day": day_s, "oddsUsed": 0, "lastPull": {}}
             st.update(oddsCap=fanduel.day_cap(credits, now), creditsAtCap=credits)
@@ -195,7 +203,32 @@ class FanDuelPuller:
         if raise_day.strip() == day_s and raise_n.strip().isdigit():
             st["oddsCap"] = max(st.get("oddsCap", 0), int(raise_n))
         self.state = st
-        log(f"  FanDuel: ON | {self.credits} credits left | today's cap {st['oddsCap']}, used {st['oddsUsed']}")
+        each = " + ".join("?" if c is None else str(c) for c in self.left.values())
+        log(f"  FanDuel: ON | {len(self.keys)} key(s): {each} credits left | today's cap {st['oddsCap']}, "
+            f"used {st['oddsUsed']}")
+
+    @property
+    def key(self) -> str:
+        """The account in use: the first one still above FLOOR ('' = all used up)."""
+        for k in self.keys:
+            c = self.left.get(k)
+            if c is not None and c > fanduel.FLOOR:
+                return k
+        return ""
+
+    @property
+    def credits(self) -> int | None:
+        """The account in use's credits (0 when every account is down to FLOOR)."""
+        k = self.key
+        return self.left.get(k) if k else (0 if self.left else None)
+
+    @property
+    def total_credits(self) -> int:
+        return sum(c for c in self.left.values() if c is not None)
+
+    def pooled(self) -> int:
+        """All accounts as ONE number the budget understands: FLOOR + what each can still spend."""
+        return fanduel.FLOOR + sum(max(0, c - fanduel.FLOOR) for c in self.left.values() if c is not None)
 
     def pull(self, sport: str, kind: str, now: datetime, only_keys: set[str] | None = None) -> None:
         """kind 'morning' (every game of the sport), 'T-10' (only `only_keys`, the games
@@ -236,14 +269,30 @@ class FanDuelPuller:
             if listed is not None and not any(match_teams(sport, a, h, t, elig) for a, h, t in listed):
                 self.log(f"  FanDuel {sport} (fill-in): {len(elig)} missing game(s) not listed yet - no credit spent")
                 return 0
+        key = self.key
         try:
-            events, rem = self.fetch(sport, self.key, now, to)
+            events, rem = self.fetch(sport, key, now, to)
         except Exception as e:
-            self.log(f"  FanDuel {sport}: pull FAILED ({e})")
-            return 0
-        cost = (self.credits - rem) if (rem is not None and self.credits is not None) else (1 if events else 0)
+            if not fanduel.out_of_credits(e):
+                self.log(f"  FanDuel {sport}: pull FAILED ({e})")
+                return 0
+            # this account ran dry before we knew it: the next one takes over, same pull
+            self.left[key] = 0
+            nxt = self.key
+            if not nxt:
+                self.log(f"  FanDuel {sport}: every account is out of credits - nothing pulled")
+                return 0
+            self.log(f"  FanDuel: key ...{key[-4:]} is out of credits - switching to ...{nxt[-4:]}")
+            key = nxt
+            try:
+                events, rem = self.fetch(sport, key, now, to)
+            except Exception as e2:
+                self.log(f"  FanDuel {sport}: pull FAILED ({e2})")
+                return 0
+        before = self.left.get(key)
+        cost = (before - rem) if (rem is not None and before is not None) else (1 if events else 0)
         if rem is not None:
-            self.credits = rem
+            self.left[key] = rem
         if refresh:  # counted apart: a pull-down never uses up the day's 10-minute grabs
             st["refreshUsed"] = st.get("refreshUsed", 0) + max(cost, 0)
             st["lastRefresh"][sport] = store.iso(now)
@@ -279,7 +328,7 @@ class FanDuelPuller:
             self.lines.append({"sport": sport, "game": f"{g.away.abbr} @ {g.home.abbr}", "start": g.start_utc,
                                "kind": kind, "away": a, "home": h})
         self.log(f"  FanDuel {sport} ({kind}): {len(matched)} game(s) matched of {len(events)}, "
-                 f"cost {cost}, {self.credits} credits left")
+                 f"cost {cost}, {self.total_credits} credits left (all accounts)")
         return len(matched)
 
 
@@ -425,21 +474,26 @@ def save_rows(fs, rows: list[dict], day_s: str, log, label: str) -> None:
     log(f"  saved {n} game(s) to Firebase ({label})")
 
 
+ODDS_KEY_NAMES = ("ODDS_API_KEY", "ODDS_API_KEY_2", "ODDS_API_KEY_3")
+
+
 def fanduel_for(fs, games, day_s, log, now, dry_run: bool, with_odds: bool) -> FanDuelPuller:
-    """FanDuel only with the ODDS_API_KEY secret, and never while the app's Auto-fill
-    switch is off (credits saved for the days it's on; DK splits keep coming, free)."""
-    key = os.environ.get("ODDS_API_KEY", "").strip() if (with_odds or not dry_run) else ""
-    if not key and not dry_run:
+    """FanDuel only with the ODDS_API_KEY secret(s), and never while the app's Auto-fill
+    switch is off (credits saved for the days it's on; DK splits keep coming, free).
+    ODDS_API_KEY_2 / ODDS_API_KEY_3 (user 10/8): extra accounts, used in that order."""
+    keys = [os.environ.get(n, "").strip() for n in ODDS_KEY_NAMES] if (with_odds or not dry_run) else []
+    keys = [k for k in keys if k]
+    if not keys and not dry_run:
         log("  FanDuel: OFF (no ODDS_API_KEY)")
-    if key and fs:
+    if keys and fs:
         try:
             switch = fs.app_auto_fill()
         except Exception:
             switch = None
         if switch is False:
             log("  FanDuel: PAUSED - Auto-fill is switched off in the app (no credits spent)")
-            key = ""
-    return FanDuelPuller(key, fs, games, day_s, log, now)
+            keys = []
+    return FanDuelPuller(keys, fs, games, day_s, log, now)
 
 
 def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.sleep, clock=utcnow,
@@ -525,7 +579,7 @@ def run(dry_run: bool, wait: bool, sports: list[str], log=print, sleep=time.slee
             handled = req
             try:
                 fs.set_refresh_done({"handled": req, "at": store.iso(clock()), "games": len(keys),
-                                     "splitsSaved": len(got), "credits": fd.credits})
+                                     "splitsSaved": len(got), "credits": fd.total_credits if fd.on else None})
             except Exception as e:
                 log(f"  pull-down answer not saved ({e}) - the app times out and shows what is saved")
 
@@ -613,19 +667,24 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--sports", default=",".join(official.SPORTS))
     a = ap.parse_args(argv)
     if a.check_odds:
-        key = os.environ.get("ODDS_API_KEY", "").strip()
-        if not key:
+        keys = [(n, os.environ.get(n, "").strip()) for n in ODDS_KEY_NAMES]
+        keys = [(n, k) for n, k in keys if k]
+        if not keys:
             print("Odds API check: NO KEY (ODDS_API_KEY secret missing)")
             return 1
-        try:
-            left = fanduel.credits_left(key)
-        except Exception as e:
-            print(f"Odds API check: FAILED ({e})")
-            return 1
+        pooled, ok = fanduel.FLOOR, True
+        for n, k in keys:
+            try:
+                left = fanduel.credits_left(k)
+                print(f"Odds API check: {n} OK | {left} credits left")
+                pooled += max(0, (left or 0) - fanduel.FLOOR)
+            except Exception as e:
+                print(f"Odds API check: {n} FAILED ({e})")
+                ok = False
         now = utcnow()
-        print(f"Odds API check: OK | {left} credits left | {fanduel.days_left(now)} day(s) to the reset on "
-              f"{fanduel.next_reset(now):%b %d} 12 AM UTC | today's budget: {fanduel.day_cap(left or 0, now)}")
-        return 0
+        print(f"All accounts: {fanduel.days_left(now)} day(s) to the reset on {fanduel.next_reset(now):%b %d} "
+              f"12 AM UTC | 10-minute budget now: {fanduel.day_cap(pooled, now)}")
+        return 0 if ok else 1
     if a.check_firebase:
         fs = store.firestore_from_env()
         if not fs:

@@ -95,6 +95,13 @@ class OddsApiError(Exception):
     pass
 
 
+def out_of_credits(e: Exception) -> bool:
+    """The Odds API's answer when an account's credits are used up (HTTP 401
+    OUT_OF_USAGE_CREDITS / "Usage quota has been reached"; 429 on some plans)."""
+    s = str(e)
+    return ("401" in s or "429" in s) and any(w in s.lower() for w in ("quota", "usage", "credits"))
+
+
 @dataclass
 class FdGame:
     event_id: str

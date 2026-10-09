@@ -58,6 +58,8 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.mode == 'check-odds'
         env:
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          ODDS_API_KEY_2: ${{ secrets.ODDS_API_KEY_2 }}
+          ODDS_API_KEY_3: ${{ secrets.ODDS_API_KEY_3 }}
         run: python -m robot.main --check-odds
       - name: Run the robot (morning grab + 10 minutes before each game)
         if: github.event_name == 'schedule' || inputs.mode == 'live'
@@ -65,6 +67,9 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           # FanDuel lines run ONLY when this secret exists (its own on/off switch)
           ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          # extra accounts (user 10/8), used in order once the one before runs down
+          ODDS_API_KEY_2: ${{ secrets.ODDS_API_KEY_2 }}
+          ODDS_API_KEY_3: ${{ secrets.ODDS_API_KEY_3 }}
           # optional last day (YYYY-MM-DD, Eastern); after it the robot pulls nothing
           ROBOT_UNTIL: ${{ vars.ROBOT_UNTIL }}
           # optional one-day FanDuel budget raise, "YYYY-MM-DD=N"
